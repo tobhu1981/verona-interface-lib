@@ -1,0 +1,164 @@
+name: Generate and Deploy Documentation
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'player@*'
+      - 'editor@*'
+      - 'schemer@*'
+      - 'widget@*'
+  workflow_dispatch:
+
+jobs:
+  docs:
+    name: Generate API Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+          
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Build packages
+        run: pnpm build
+        
+      - name: Generate documentation
+        run: |
+          # Generate docs for each package
+          pnpm --filter @verona/player docs
+          pnpm --filter @verona/editor docs || echo "Editor docs skipped"
+          pnpm --filter @verona/schemer docs || echo "Schemer docs skipped"
+          pnpm --filter @verona/widget docs || echo "Widget docs skipped"
+        
+      - name: Prepare docs directory
+        run: |
+          mkdir -p gh-pages
+          
+          # Copy player docs
+          if [ -d "packages/player/docs" ]; then
+            cp -r packages/player/docs gh-pages/player
+          fi
+          
+          # Copy editor docs
+          if [ -d "packages/editor/docs" ]; then
+            cp -r packages/editor/docs gh-pages/editor
+          fi
+          
+          # Copy schemer docs
+          if [ -d "packages/schemer/docs" ]; then
+            cp -r packages/schemer/docs gh-pages/schemer
+          fi
+          
+          # Copy widget docs
+          if [ -d "packages/widget/docs" ]; then
+            cp -r packages/widget/docs gh-pages/widget
+          fi
+          
+          # Create index page
+          cat > gh-pages/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verona Interface Libraries - Documentation</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                max-width: 800px;
+                margin: 50px auto;
+                padding: 20px;
+                line-height: 1.6;
+              }
+              h1 { color: #333; }
+              .package {
+                margin: 20px 0;
+                padding: 20px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+              }
+              .package h2 { margin-top: 0; }
+              .package a {
+                color: #0066cc;
+                text-decoration: none;
+              }
+              .package a:hover { text-decoration: underline; }
+              .badge {
+                display: inline-block;
+                padding: 4px 8px;
+                background: #0066cc;
+                color: white;
+                border-radius: 4px;
+                font-size: 0.85em;
+                margin-left: 10px;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>📚 Verona Interface Libraries</h1>
+            <p>API Documentation for all Verona interface packages.</p>
+            
+            <div class="package">
+              <h2>@verona/player <span class="badge">Spec 4.0.0</span></h2>
+              <p>Verona Player Interface - Communication between player and host.</p>
+              <a href="./player/index.html">View Documentation →</a>
+            </div>
+            
+            <div class="package">
+              <h2>@verona/editor <span class="badge">Spec 3.5.0</span></h2>
+              <p>Verona Editor Interface - Communication between editor and host.</p>
+              <a href="./editor/index.html">View Documentation →</a>
+            </div>
+            
+            <div class="package">
+              <h2>@verona/schemer <span class="badge">Spec 2.0.0</span></h2>
+              <p>Verona Schemer Interface - Schema management and validation.</p>
+              <a href="./schemer/index.html">View Documentation →</a>
+            </div>
+            
+            <div class="package">
+              <h2>@verona/widget <span class="badge">Spec 1.0.0</span></h2>
+              <p>Verona Widget Interface - Widget communication protocol.</p>
+              <a href="./widget/index.html">View Documentation →</a>
+            </div>
+            
+            <hr>
+            <p><small>
+              📖 <a href="https://verona-interfaces.github.io/">Verona Specification</a> |
+              💻 <a href="https://github.com/your-org/verona-monorepo">GitHub Repository</a>
+            </small></p>
+          </body>
+          </html>
+          EOF
+          
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-docs
+          path: gh-pages/
+          retention-days: 30
+          
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'docs: update API documentation'
