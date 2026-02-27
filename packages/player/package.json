@@ -1,48 +1,39 @@
 {
-  "name": "@verona-interfaces/player",
+  "name": "@verona/player",
   "version": "1.0.0-beta",
-  "description": "TypeScript library for Verona Player interfaces",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "description": "Verona Player Interface (Spec 6.1.1)",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
       "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
       "types": "./dist/index.d.ts"
     }
   },
-  "files": [
-    "dist",
-    "README.md"
-  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "clean": "rm -rf dist *.tsbuildinfo",
     "typecheck": "tsc --noEmit",
-    "docs": "typedoc",
-    "docs:serve": "npm run docs && npx serve docs",
-    "prepublishOnly": "npm run build"
+    "docs": "typedoc --logLevel Error",
+    "docs:serve": "npm run docs && npx serve docs"
   },
   "keywords": [
     "verona",
-    "verona-spec-6.1.1",
+    "verona-spec-4.0.0",
     "player",
-    "editor",
-    "interface",
-    "assessment",
-    "iqb"
+    "interface"
   ],
   "author": "",
   "license": "MIT",
+  "dependencies": {
+    "@verona/shared": "workspace:*"
+  },
   "devDependencies": {
     "tsup": "^8.0.1",
     "typescript": "^5.3.3",
-    "typedoc": "^0.25.7",
-    "typedoc-plugin-markdown": "^3.17.1"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "typedoc": "^0.26.0"
   }
 }

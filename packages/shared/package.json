@@ -16,7 +16,8 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "clean": "rm -rf dist *.tsbuildinfo",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "docs": "echo 'Shared: No docs needed (utilities only)'"
   },
   "keywords": [
     "verona",

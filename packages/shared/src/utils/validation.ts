@@ -26,13 +26,19 @@ export function isValidOperationId(value: string): boolean {
   return /^vo[pews][A-Z][a-zA-Z]*$/.test(value);
 }
 
+export interface VeronaMessage {
+  type: string;
+  sessionId?: string;
+  [key: string]: any;  // Alle anderen Properties erlaubt
+}
+
 /**
  * Check if object is a valid Verona message
  * 
  * @param obj - Object to check
  * @returns True if valid message structure
  */
-export function isVeronaMessage(obj: any): obj is { type: string } {
+export function isVeronaMessage(obj: any): obj is VeronaMessage {
   return (
     typeof obj === 'object' &&
     obj !== null &&
