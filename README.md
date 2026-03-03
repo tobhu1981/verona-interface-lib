@@ -49,7 +49,7 @@ Or change in package and run:
 pnpm build
 ```
 
-### Development: Include this Packages in your Verona-Module
+### Include this Packages in your Verona-Module
 
 1. Build the package
 
@@ -78,7 +78,7 @@ Or generate documentation for a specific package:
 pnpm --filter @verona/<package-name> docs
 ```
 
-**For detailed documentation setup, see [DOCUMENTATION.md](./DOCUMENTATION.md)**
+**For detailed documentation setup, see [here](./DOCUMENTATION.md)**
 
 ### Clean Build Artifacts
 
@@ -133,7 +133,6 @@ Detailed information can be found [here](./VERSIONING.md).
 ## Links
 
 - [Verona Specification](https://verona-interfaces.github.io/)
-- [Documentation](https://your-org.github.io/verona-monorepo/)
 
 ## License
 
