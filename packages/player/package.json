@@ -1,7 +1,8 @@
 {
   "name": "@verona/player",
   "version": "1.0.0-beta",
-  "description": "Verona Player Interface (Spec 6.1.1)",
+  "veronaSpec": "6.1.1",
+  "description": "Verona Player Interface",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -22,7 +23,7 @@
   },
   "keywords": [
     "verona",
-    "verona-spec-4.0.0",
+    "verona-spec-6.1.1",
     "player",
     "interface"
   ],

@@ -18,6 +18,19 @@ importers:
         specifier: ^5.3.3
         version: 5.9.3
 
+  packages/editor:
+    dependencies:
+      '@verona/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      tsup:
+        specifier: ^8.0.1
+        version: 8.5.1(typescript@5.9.3)(yaml@2.8.2)
+      typescript:
+        specifier: ^5.3.3
+        version: 5.9.3
+
   packages/player:
     dependencies:
       '@verona/shared':
