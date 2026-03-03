@@ -4,6 +4,17 @@
 
 **Es handelt sich um eine Beta-Version!**
 
+## Specification
+
+This library implements the [Verona Editor Specification](https://verona-interfaces.github.io/editor/).
+
+**The currently used specification version is hard-coded in packages/package.json!**
+
+```bash
+# Check used version
+npm pkg get veronaSpec
+```
+
 ## Getting Started
 
 ### Prerequisites
@@ -40,28 +51,22 @@ npm link @verona/<package-name>
 ```
 Now you can find your verona-lib in node_modules named: @verona
 
-## Erprobung der Lib
+## Include in a verona module
 
-[**Hier**](./EDITOR-INTEGRATION.md) ist eine Zusammenfassung zur Erprobung mit dem Speedtest-Player zu finden.
+[**Here**](./EDITOR-INTEGRATION.md) is an example of how the player package is integrated into and used in the Verona module: Speedtest Player.
 
 ## Documentation
 
-#### API Doku erzeugen: 
+#### API Doku: 
 
 ```bash
 cd packages/editor
 pnpm docs
 ```
 
-## Versionierung
+## Versioning
 
 Find more information about this [here](../../README.md) in the mono-repo documentation.
-
-## Specification
-
-This library implements the [Verona Editor Specification](https://verona-interfaces.github.io/editor/).
-
-**The currently used specification version is hard-coded in packages/package.json!**
 
 ## License
 
