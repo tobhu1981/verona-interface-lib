@@ -1,259 +1,344 @@
-# Versionierungs-Guide Vorabversion
+# Versionierungs-Anleitung: Spec vs. Package Version
 
-**Nachfolgend wird beschrieben, wie eine Versionierung bzgl. **npm-package-Version** und **Verona-Lib-Spezifikation** durchgeführt werden könnte. Über die Eignung einer solchen Vorgehensweise muss diskutiert werden.**
+## Zwei Versionen verstehen
 
-## NPM-Paket-Versionierung
+### Package-Version (NPM)
+- Version **Library-Implementation**
+- Folgt SemVer (Semantic Versioning)
+- Ändert sich bei Code-Updates
 
-Diese Library folgt [Semantic Versioning](https://semver.org/):
+### Spec-Version (Verona)
+- Die Version der **Verona-Spezifikation** die implementiert wird
+- Definiert von Verona-Projekt
+- Ändert sich nur bei Spec-Updates
 
-```
-MAJOR.MINOR.PATCH
-1.2.3
-│ │ │
-│ │ └─── PATCH: Bugfixes (backward-compatible)
-│ └───── MINOR: Neue Features (backward-compatible)
-└─────── MAJOR: Breaking Changes (inkl. Spec-Updates)
-```
+---
 
-## Spec-Version-Tracking
+## Setup: Beide Versionen in jeweiliger package.json
 
-Jede Library-Version hat einen **harten Verweis** auf die Verona Spec-Version:
+### Beispiel für Package: Player
 
-```typescript
-// In src/constants.ts
-export const VERONA_SPEC_VERSION = '4.0.0';
-```
+**`packages/player/package.json`:**
 
 ```json
-// In package.json
 {
-  "keywords": ["verona-spec-4.0.0"]
+  "name": "@verona/player",
+  "version": "1.2.3",              // ← Package-Version (NPM)
+  "veronaSpec": "6.1.1",           // ← Spec-Version (Custom Field)
+  "keywords": [
+    "verona",
+    "verona-player",
+    "verona-spec-6.1.1"            // ← Für npm-Suche
+  ]
 }
 ```
 
-## Versionierungs-Workflows
-
-### 1. Bugfix (1.0.0 → 1.0.1)
-
-**Wann:** Fehler beheben, keine neuen Features, gleiche Spec
-
-```bash
-# 1. Bugfix implementieren
-# 2. Tests prüfen
-npm test
-
-# 3. Version bumpen
-npm version patch
-
-# Das macht automatisch:
-# - package.json: "version": "1.0.1"
-# - npm run build
-# - git commit
-# - git tag v1.0.1
-
-# 4. Publishen
-npm publish
-
-# Tags werden automatisch gepusht (postversion script)
-```
-
-### 2. Neues Feature (1.0.0 → 1.1.0)
-
-**Wann:** Neue Funktionalität, backward-compatible, gleiche Spec
-
-```bash
-# 1. Feature implementieren
-# z.B. neue Utility-Funktion
-
-# 2. Tests prüfen
-npm test
-
-# 3. Version bumpen
-npm version minor
-
-# 4. CHANGELOG aktualisieren
-# CHANGELOG.md:
-## [1.1.0] - 2024-02-10
-### Added
-- New utility function: xyz()
-
-# 5. Publishen
-npm publish
-```
-
-### 3. Spec-Update (1.0.0 → 2.0.0)
-
-**Wann:** Verona Spec ändert sich (4.0.0 → 4.1.0)
-
-```bash
-# 1. Code an neue Spec anpassen
-# - src/types/operations.ts
-# - src/types/payloads.ts
-# - src/types/values.ts
-# - src/types/schemas.ts
-
-# 2. Spec-Version aktualisieren
-# src/constants.ts:
-export const VERONA_SPEC_VERSION = '4.1.0';
-
-# package.json:
-{
-  "keywords": ["verona", "verona-spec-4.1.0", ...]
-}
-
-# 3. Tests prüfen
-npm test
-
-# 4. MAJOR Version bump
-npm version major  # 1.0.0 → 2.0.0
-
-# 5. CHANGELOG aktualisieren
-# CHANGELOG.md:
-## [2.0.0] - 2024-02-10
-### Breaking Changes
-- Updated to Verona Spec 4.1.0
-- Added new operation type XYZ
-- Changed payload structure for ABC
-
-### Migration Guide
-Users need to update...
-
-# 6. Publishen
-npm publish
-```
-
-## Versions-Übersicht
-
-| Library Version | Spec Version | Änderungstyp | Beispiel |
-|----------------|--------------|--------------|----------|
-| 1.0.0 → 1.0.1  | 4.0.0        | Bugfix       | Encoding-Fehler behoben |
-| 1.0.0 → 1.1.0  | 4.0.0        | Feature      | Neue Utility-Funktion |
-| 1.0.0 → 2.0.0  | 4.1.0        | Breaking     | Spec-Update |
-| 2.0.0 → 2.0.1  | 4.1.0        | Bugfix       | TypeScript-Fehler fix |
-
-## Version prüfen
-
-### Im Code (zur Laufzeit)
+**`packages/player/src/constants.ts`:**
 
 ```typescript
-import { VERONA_SPEC_VERSION } from '@verona-interfaces/player';
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
-console.log('Spec Version:', VERONA_SPEC_VERSION);  // '4.0.0'
+import pkg from '../package.json';
+
+/** @internal Default target origin for postMessage */
+export const DEFAULT_TARGET_ORIGIN = '*';
+
+/**
+ * NPM Package version of @verona/player library
+ * Automatically read from package.json
+ * @public
+ */
+export const PACKAGE_VERSION = pkg.version;
+
+/**
+ * Verona Player Specification version implemented by this library
+ * Automatically read from package.json
+ * @public
+ */
+export const VERONA_SPEC_VERSION = pkg.veronaSpec;
 ```
 
-### In package.json
+**`packages/player/src/index.ts`:**
+
+```typescript
+// Constants
+export { 
+  PACKAGE_VERSION, 
+  VERONA_SPEC_VERSION,
+  DEFAULT_TARGET_ORIGIN 
+} from './constants';
+
+// ... rest of exports
+```
+
+---
+
+## Workflow 1: Package-Version ändern (Bugfix/Features)
+
+**Wann:** Code-Änderungen ohne Spec-Änderung
+
+### Schritt-für-Schritt:
 
 ```bash
-npm info @verona-interfaces/player version
-npm info @verona-interfaces/player keywords
+# 1. In das Package wechseln
+cd packages/player
+
+# 2. Code ändern
+# ... deine Änderungen ...
+
+# 3. Version setzen
+
+## pumpen (automatisch):
+npm version patch   # 1.2.3 → 1.2.4 (Bugfix)
+npm version minor   # 1.2.3 → 1.3.0 (Feature)
+
+## manuell setzen:
+npm version         # 1.0.0-beta → 1.2.0-beta
+
+# 4. Build
+pnpm build
+
+# 5. Commit & Push
+git add .
+git commit -m "fix: correct message handling"
+git push origin main
+
+# 6. Optional: Tag für Release
+git tag player@1.2.4
+git push --tags
 ```
 
-### Via npm list
+**Resultat:**
+- ✅ `package.json` → `"version": "1.2.4"`
+- ✅ `package.json` → `"veronaSpec": "6.1.1"` (unverändert!)
+- ✅ `PACKAGE_VERSION` → `"1.2.4"`
+- ✅ `VERONA_SPEC_VERSION` → `"6.1.1"` (unverändert!)
+
+---
+
+## Workflow 2: Spec-Version ändern (Breaking Change)
+
+**Wann:** Neue Verona-Spezifikation veröffentlicht
+
+### Schritt-für-Schritt:
 
 ```bash
-# Im Projekt das die Library verwendet
-npm list @verona-interfaces/player
+# 1. In das Package wechseln
+cd packages/player
+
+# 2. Code anpassen für neue Spec
+# ... Implementierung der neuen Spec ...
+
+# 3. Spec-Version MANUELL in package.json ändern
 ```
 
-## Kompatibilität kommunizieren
+**Editiere `package.json`:**
+```json
+{
+  "name": "@verona/player",
+  "version": "1.2.3",              // ← Noch alte Version
+  "veronaSpec": "6.2.0",           // ← MANUELL auf neue Spec ändern!
+  "keywords": [
+    "verona",
+    "verona-player",
+    "verona-spec-6.2.0"            // ← Auch hier aktualisieren!
+  ]
+}
+```
 
-### In README.md
+```bash
+# 4. MAJOR Version bump (Breaking Change!)
+npm version major   # 1.2.3 → 2.0.0
+
+# 5. Build
+pnpm build
+
+# 6. Commit & Push
+git add .
+git commit -m "BREAKING CHANGE: update to Verona Spec 6.2.0"
+git push origin main
+
+# 7. Tag für Release
+git tag player@2.0.0
+git push --tags
+```
+
+**Resultat:**
+- ✅ `package.json` → `"version": "2.0.0"` (MAJOR bump!)
+- ✅ `package.json` → `"veronaSpec": "6.2.0"` (neue Spec!)
+- ✅ `PACKAGE_VERSION` → `"2.0.0"`
+- ✅ `VERONA_SPEC_VERSION` → `"6.2.0"`
+
+---
+
+## Versionierungs-Matrix
+
+| Änderung | Package-Version | Spec-Version | Bump-Type |
+|----------|----------------|--------------|-----------|
+| Bugfix | 1.2.3 → 1.2.4 | 6.1.1 (gleich) | PATCH |
+| Neues Feature | 1.2.3 → 1.3.0 | 6.1.1 (gleich) | MINOR |
+| Breaking Change (Code) | 1.2.3 → 2.0.0 | 6.1.1 (gleich) | MAJOR |
+| **Neue Spec** | **1.2.3 → 2.0.0** | **6.1.1 → 6.2.0** | **MAJOR** |
+
+---
+
+## Entscheidungsbaum
+
+```
+Hat sich die Verona-Spec geändert?
+│
+├─ JA
+│  ├─ 1. veronaSpec in package.json MANUELL ändern
+│  ├─ 2. keywords aktualisieren
+│  ├─ 3. npm version major (Breaking Change!)
+│  └─ 4. CHANGELOG.md: "BREAKING: Spec 6.2.0"
+│
+└─ NEIN
+   ├─ Nur Code-Änderungen?
+   │
+   ├─ Bugfix → npm version patch
+   ├─ Feature → npm version minor
+   └─ Breaking Code → npm version major
+```
+
+---
+
+## Prüfen welche Versionen aktuell sind
+
+```bash
+# In Code
+cd packages/player
+pnpm build
+node -e "const p = require('./dist/index.js'); console.log('Package:', p.PACKAGE_VERSION, 'Spec:', p.VERONA_SPEC_VERSION);"
+
+# Output: Package: 1.2.4 Spec: 6.1.1
+```
+
+```typescript
+// Im Verona-Modul
+import { PACKAGE_VERSION, VERONA_SPEC_VERSION } from '@verona/player';
+
+console.log('Player Library:', PACKAGE_VERSION);    // "1.2.4"
+console.log('Implements Spec:', VERONA_SPEC_VERSION); // "6.1.1"
+```
+
+---
+
+## Publishing Workflow
+
+### Veröffentlichen nach Package-Update:
+
+```bash
+cd packages/player
+pnpm build
+
+# Test lokal
+npm pack
+# Prüfe den .tgz
+
+# Publish
+npm publish
+
+# Tag pushen
+git push --tags
+```
+
+### Veröffentlichen nach Spec-Update:
+
+```bash
+cd packages/player
+pnpm build
+
+# WICHTIG: Teste Kompatibilität!
+# Teste mit alten und neuen Hosts
+
+# Publish mit Tag für Breaking Change
+npm publish
+
+# Tag pushen
+git push --tags
+
+# GitHub Release mit Migration Guide
+```
+
+---
+
+## GitHub Pages Badge
+
+Die `.github/workflows/docs.yml` zeigt automatisch beide Versionen:
+
+**Option 1: Nur Spec-Version (aktuell):**
+```html
+<span class="badge">Spec $PLAYER_VERSION</span>
+```
+
+**Option 2: Beide Versionen:**
+
+Erweitere die `docs.yml`:
+
+```yaml
+# Read both versions
+PLAYER_PKG_VERSION=$(node -p "require('./packages/player/package.json').version")
+PLAYER_SPEC_VERSION=$(node -p "require('./packages/player/package.json').veronaSpec")
+
+# In HTML
+<h2>
+  @verona/player 
+  <span class="badge">v$PLAYER_PKG_VERSION</span>
+  <span class="badge spec">Spec $PLAYER_SPEC_VERSION</span>
+</h2>
+```
+
+---
+
+## ⚠️ Wichtige Regeln
+
+### ✅ DO:
+- ✅ **IMMER** MAJOR bump bei Spec-Änderung
+- ✅ **IMMER** CHANGELOG.md aktualisieren
+- ✅ **IMMER** Migration Guide bei Breaking Changes
+- ✅ Beide Versionen in README dokumentieren
+- ✅ Keywords in package.json aktualisieren
+
+### ❌ DON'T:
+- ❌ Spec-Version ändern ohne Code-Anpassung
+- ❌ MINOR/PATCH bump bei Spec-Update
+- ❌ Vergessen veronaSpec in package.json zu ändern
+- ❌ Vergessen keywords zu aktualisieren
+
+---
+
+## Checkliste: Spec-Update
+
+```
+☐ Code für neue Spec implementiert
+☐ Tests aktualisiert
+☐ package.json → veronaSpec geändert
+☐ package.json → keywords aktualisiert
+☐ npm version major ausgeführt
+☐ CHANGELOG.md geschrieben
+☐ MIGRATION.md erstellt (wenn nötig)
+☐ README.md aktualisiert
+☐ Gebaut und getestet
+☐ Committed & Tagged
+☐ Gepusht
+☐ GitHub Release erstellt
+☐ npm published
+```
+
+---
+
+## 🔗 Kompatibilitäts-Matrix im README
+
+Füge zu jedem Package-README hinzu:
 
 ```markdown
 ## Compatibility
 
-| Library Version | Verona Spec | Status |
-|----------------|-------------|--------|
-| 2.x.x          | 4.1.0       | ✅ Current |
-| 1.x.x          | 4.0.0       | ⚠️ Outdated |
-```
-
-### In CHANGELOG.md
-
-Jeder Release dokumentiert die Spec-Version:
-
-```markdown
-## [2.0.0] - 2024-02-10
-### Supported
-- Verona Specification: 4.1.0
-```
-
-## Automatisierung
-
-### NPM Scripts (bereits konfiguriert)
-
-```json
-{
-  "scripts": {
-    "version": "npm run build && git add -A",
-    "postversion": "git push && git push --tags"
-  }
-}
-```
-
-**Was passiert bei `npm version patch`:**
-1. `version` script läuft: Build + Git add
-2. package.json wird aktualisiert
-3. Git commit wird erstellt
-4. Git tag wird erstellt
-5. `postversion` script läuft: Push + Push tags
-
-### GitHub Actions (optional)
-
-Automatisches Publishing bei Git Tags:
-
-```yaml
-# .github/workflows/publish.yml
-name: Publish to NPM
-
-on:
-  push:
-    tags:
-      - 'v*'
-
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          registry-url: 'https://registry.npmjs.org'
-      - run: npm install
-      - run: npm run build
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-```
-
-## Checkliste für neuen Release
-
-- [ ] Code-Änderungen implementiert
-- [ ] Tests laufen durch (`npm test`)
-- [ ] Dokumentation aktualisiert
-- [ ] CHANGELOG.md aktualisiert
-- [ ] Spec-Version korrekt? (bei Spec-Updates)
-- [ ] `npm version [patch|minor|major]`
-- [ ] `npm publish`
-- [ ] GitHub Release erstellen (optional)
-
-## FAQ
-
-**Q: Wann ist ein Spec-Update ein Breaking Change?**  
-A: Immer! Auch wenn die Spec backward-compatible ist, solltest du MAJOR bumpen, damit Nutzer wissen, dass sich die zugrunde liegende Spec geändert hat.
-
-**Q: Kann ich Spec 4.0.0 und 4.1.0 gleichzeitig unterstützen?**  
-A: Technisch ja, aber nicht empfohlen. Besser: Eine Library-Version pro Spec-Version.
-
-**Q: Was wenn ich nur die Dokumentation ändere?**  
-A: Patch-Version reicht (`npm version patch`).
-
-**Q: Muss ich bei jeder Änderung publishen?**  
-A: Nein! Du kannst auch mehrere Changes sammeln und dann publishen.
-
-## Weiterführende Links
-
-- [Semantic Versioning](https://semver.org/)
-- [Keep a Changelog](https://keepachangelog.com/)
-- [NPM Version Command](https://docs.npmjs.com/cli/v9/commands/npm-version)
+| Library Version | Spec Version | Status | Release Date |
+|----------------|--------------|--------|--------------|
+| 2.x.x | 6.2.0 | ✅ Current | 2024-03-15 |
+| 1.x.x | 6.1.1 | ⚠️ Legacy | 2024-01-10 |
+| 0.x.x | 6.0.0 | ❌ Deprecated | 2023-11-01 |
