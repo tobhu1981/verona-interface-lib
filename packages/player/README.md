@@ -1,41 +1,55 @@
-# Alter Text aus Player-Lib
+# Verona Player Interface Library (Spec 6.1.1)
 
 **Es handelt sich um eine Beta-Version!**
 
-## Installation als lokales npm-package
+## Getting Started
 
-**In der Library**
+### Prerequisites
 
-```bash
-npm run build
-```
+Read and install all requirements in the **README.md** file of this MonoRepos in the root directory.
 
-**Im Player**
+### Install Dependencies
 
-Zuvor in `package.json` Pfad zur Lib angegeben.
-Hier ein Beispiel:
-
- `"@verona-interfaces/player": "file:../verona-interfaces-player-lib"`
-
+If necessary:
 
 ```bash
-npm install @verona-interfaces/player
+pnpm install
 ```
+
+### Development
+
+Include this Packages in your Verona-Module
+
+1. Build package
+
+```bash
+pnpm build
+```
+
+2. Navigate to the directory of the package you want to include in a Verona module and run:
+
+```bash
+npm link
+```
+3. Run in your Verona-Modul:
+
+```bash
+npm link @verona/<package-name>
+```
+Now you can find your verona-lib in node_modules named: @verona
 
 ## Erprobung der Lib
 
 [**Hier**](./PLAYER-INTEGRATION.md) ist eine Zusammenfassung zur Erprobung mit dem Speedtest-Player zu finden.
-
 
 ## Documentation
 
 #### API Doku erzeugen: 
 
 ```bash
-npm run docs
+cd packages/player
+pnpm docs
 ```
-
-Die so erzeugte API-Doku wird auch auf GitHub-Pages via GitHub-Action angezeigt. 
 
 #### Arbeitsweise der Bibliothek
 
@@ -43,107 +57,11 @@ Die so erzeugte API-Doku wird auch auf GitHub-Pages via GitHub-Action angezeigt.
 
 ## Versionierung
 
-
-## Lizenz
-
-MIT
-
-## Links
-
-- [Verona Specification](https://verona-interfaces.github.io/player/)
-
-
-
-# Neuer Text von AI für Player im Monorepo
-
-Verona Player Interface Library (Spec 4.0.0)
-
-## Installation
-
-```bash
-npm install @verona/player
-```
-
-## Quick Start
-
-```typescript
-import { VeronaPlayer, VERONA_PLAYER_SPEC_VERSION } from '@verona/player';
-
-console.log('Spec Version:', VERONA_PLAYER_SPEC_VERSION); // '4.0.0'
-
-const player = new VeronaPlayer({
-  debug: true,
-  allowedOrigin: '*'
-});
-
-// Register handlers
-player.onStartCommand((command) => {
-  console.log('Start command received:', command.sessionId);
-  
-  if (command.unitDefinition) {
-    // Load unit
-  }
-  
-  if (command.unitState) {
-    // Restore state
-  }
-});
-
-// Send ready
-player.sendReady({
-  metadata: JSON.stringify({
-    '@context': 'https://w3id.org/iqb/metadata',
-    type: 'player',
-    version: '1.0.0'
-  })
-});
-
-// Send state
-player.sendStateChanged({
-  dataParts: {
-    'response': 'encoded-data'
-  },
-  responseProgress: 'complete'
-});
-
-// Cleanup
-player.destroy();
-```
-
-## API Reference
-
-### `VeronaPlayer`
-
-Main player class for communication with host.
-
-#### Constructor
-
-```typescript
-new VeronaPlayer(options?: VeronaPlayerOptions)
-```
-
-#### Methods
-
-- `sendReady(data: { metadata: string }): void`
-- `sendStateChanged(unitState?, playerState?, log?): void`
-- `onStartCommand(callback): void`
-- `destroy(): void`
-
-### Types
-
-- `VeronaPlayerOptions`
-- `UnitState`
-- `PlayerConfig`
-- `StartCommandData`
-- `LogEntry`
-
-### Constants
-
-- `VERONA_PLAYER_SPEC_VERSION = '4.0.0'`
+Find more information about this [here](../../README.md) in the mono-repo documentation.
 
 ## Specification
 
-This library implements the [Verona Player Specification 4.0.0](https://verona-interfaces.github.io/).
+This library implements the [Verona Player Specification 6.1.1](https://verona-interfaces.github.io/player/).
 
 ## License
 

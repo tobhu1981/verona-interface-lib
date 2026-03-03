@@ -13,7 +13,8 @@ import { Unit } from 'common/interfaces/unit';
 import { UnitViewComponent } from './unit-view.component';
 
 // TODO: base64 encoding/decoding if host sends/accepts base64 encoded data
-import { VeronaPlayerApiService, StartCommandData, encodeBase64, decodeBase64, UnitState} from '@verona-interfaces/player';
+import { VeronaPlayerApiService, StartCommandData, encodeBase64, decodeBase64, UnitState} from '@verona/player';
+
 
 @Component({
   selector: 'speedtest-player',
