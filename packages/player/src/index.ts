@@ -4,7 +4,7 @@
 // ============================================================================
 
 // Constants (not exported by default, use specific imports if needed)
-export { DEFAULT_TARGET_ORIGIN, MIN_SHARED_PARAMETER_KEY_LENGTH, VERONA_SPEC_VERSION} from './constants';
+export { DEFAULT_TARGET_ORIGIN, MIN_SHARED_PARAMETER_KEY_LENGTH, PACKAGE_VERSION, VERONA_SPEC_VERSION} from './constants';
 
 // Re-export shared utilities
 export { encodeBase64, decodeBase64, isVeronaMessage } from '@verona/shared';
