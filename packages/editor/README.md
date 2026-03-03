@@ -59,7 +59,9 @@ Find more information about this [here](../../README.md) in the mono-repo docume
 
 ## Specification
 
-This library implements the [Verona Editor Specification 3.5.0](https://verona-interfaces.github.io/editor/).
+This library implements the [Verona Editor Specification](https://verona-interfaces.github.io/editor/).
+
+**The currently used specification version is hard-coded in packages/package.json!**
 
 ## License
 

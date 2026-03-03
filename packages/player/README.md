@@ -57,11 +57,13 @@ pnpm docs
 
 ## Versionierung
 
-Find more information about this [here](../../README.md) in the mono-repo documentation.
+Find more information about this [here](../../README.md) in the monorepo root documentation.
 
 ## Specification
 
-This library implements the [Verona Player Specification 6.1.1](https://verona-interfaces.github.io/player/).
+This library implements the [Verona Player Specification](https://verona-interfaces.github.io/player/).
+
+**The currently used specification version is hard-coded in packages/package.json!**
 
 ## License
 

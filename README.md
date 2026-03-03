@@ -1,6 +1,6 @@
 # Verona Interface Libraries Monorepo
 
-**Es handelt sich um eine Beta-Version!**
+**It's a Beta-Version!**
 
 Monorepo containing all Verona interface libraries for Player, Editor, Schemer, and Widget.
 
@@ -86,7 +86,7 @@ pnpm --filter @verona/<package-name> docs
 pnpm clean
 ```
 
-## 📦 Publishing
+## Publishing
 
 ### Publish All Packages
 
@@ -125,6 +125,10 @@ verona-monorepo/
 | `pnpm typecheck` | Type check all packages |
 | `pnpm docs` | Generate documentation |
 | `pnpm publish:all` | Publish all packages to npm |
+
+## Versioning
+
+Detailed information can be found [here](./VERSIONING.md).
 
 ## Links
 
