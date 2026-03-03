@@ -70,8 +70,8 @@ jobs:
           fi
           
           # Read versions dynamically from package.json
-          PLAYER_VERSION=$(node -p "require('./packages/player/package.json').version")
-          EDITOR_VERSION=$(node -p "require('./packages/editor/package.json').version")
+          PLAYER_VERSION=$(node -p "require('./packages/player/package.json').veronaSpec")
+          EDITOR_VERSION=$(node -p "require('./packages/editor/package.json').veronaSpec")
         
           
           # Create index page with dynamic versions
