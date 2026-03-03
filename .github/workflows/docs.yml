@@ -72,8 +72,7 @@ jobs:
           # Read versions dynamically from package.json
           PLAYER_VERSION=$(node -p "require('./packages/player/package.json').version")
           EDITOR_VERSION=$(node -p "require('./packages/editor/package.json').version")
-          SCHEMER_VERSION=$(node -p "require('./packages/schemer/package.json').version")
-          WIDGET_VERSION=$(node -p "require('./packages/widget/package.json').version")
+        
           
           # Create index page with dynamic versions
           cat > gh-pages/index.html << EOF
@@ -129,18 +128,6 @@ jobs:
               <h2>@verona/editor <span class="badge">Spec $EDITOR_VERSION</span></h2>
               <p>Verona Editor Interface - Communication between editor and host.</p>
               <a href="./editor/index.html">View Documentation →</a>
-            </div>
-            
-            <div class="package">
-              <h2>@verona/schemer <span class="badge">Spec $SCHEMER_VERSION</span></h2>
-              <p>Verona Schemer Interface - Schema management and validation.</p>
-              <a href="./schemer/index.html">View Documentation →</a>
-            </div>
-            
-            <div class="package">
-              <h2>@verona/widget <span class="badge">Spec $WIDGET_VERSION</span></h2>
-              <p>Verona Widget Interface - Widget communication protocol.</p>
-              <a href="./widget/index.html">View Documentation →</a>
             </div>
             
             <hr>
