@@ -12,8 +12,9 @@ export { encodeBase64, decodeBase64, isVeronaMessage } from '@verona/shared';
 // Types
 export * from './types';
 
-// Player
+// Services
 export { VeronaPlayerApiService } from './services/VeronaPlayerApiService';
+
 export type {
   VeronaPlayerOptions,
   StartCommandData,
