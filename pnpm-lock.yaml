@@ -27,6 +27,9 @@ importers:
       tsup:
         specifier: ^8.0.1
         version: 8.5.1(typescript@5.9.3)(yaml@2.8.2)
+      typedoc:
+        specifier: ^0.26.0
+        version: 0.26.11(typescript@5.9.3)
       typescript:
         specifier: ^5.3.3
         version: 5.9.3
