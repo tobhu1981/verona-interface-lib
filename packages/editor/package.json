@@ -17,8 +17,11 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "clean": "rm -rf dist *.tsbuildinfo",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+     "docs": "typedoc --logLevel Error",
+    "docs:serve": "npm run docs && npx serve docs"
   },
+
   "keywords": [
     "verona",
     "verona-spec-3.5.0",
