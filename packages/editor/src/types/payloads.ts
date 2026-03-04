@@ -28,7 +28,7 @@ export namespace PayloadInterfacesProperties {
   export namespace EditorSend {
  
      /** voeReadyNotification - Editor->Host @public*/
-    export interface ReadyNotification {
+    export interface ReadyNotificationData {
       metadata: string; // Stringified JSON-LD metadata
     }
     
