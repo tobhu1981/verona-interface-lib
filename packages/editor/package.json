@@ -18,7 +18,7 @@
     "dev": "tsup --watch",
     "clean": "rm -rf dist *.tsbuildinfo",
     "typecheck": "tsc --noEmit",
-     "docs": "typedoc --logLevel Error",
+    "docs": "typedoc --logLevel Error",
     "docs:serve": "npm run docs && npx serve docs"
   },
 
@@ -35,7 +35,8 @@
   },
   "devDependencies": {
     "tsup": "^8.0.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "typedoc": "^0.26.0"
   }
   
 }
