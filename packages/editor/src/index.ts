@@ -25,11 +25,6 @@ export { VeronaEditorApiService } from './services/VeronaEditorApiService';
 
 export type {
   VeronaEditorOptions,
-  SharedParameter,
-  Dependency,
-  DependencyType,
-  VariableInfo,
-  EditorConfig,
   ReadyNotificationData,
   StartCommandData,
   DefinitionChangedNotificationData
