@@ -50,7 +50,7 @@ export type SharedParameter = MainSchema.SharedParameter;
 export type StartCommand = PayloadInterfacesProperties.EditorReceive.StartCommand;
 
 // Direct exports from PayloadInterfacesProperties.EditorSend
-export type ReadyNotification = PayloadInterfacesProperties.EditorSend.ReadyNotification;
+export type ReadyNotification = PayloadInterfacesProperties.EditorSend.ReadyNotificationData;
 export type DefinitionChangedNotification = PayloadInterfacesProperties.EditorSend.DefinitionChangedNotification;
 
 // Direct exports from AllowedPropertiesValues
