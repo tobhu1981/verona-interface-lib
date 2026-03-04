@@ -17,4 +17,4 @@ export const PACKAGE_VERSION = pkg.version;
  * Verona Editor Specification version
  * @public
  */
-export const VERONA_SPEC_VERSION = pkg.version;
+export const VERONA_SPEC_VERSION = pkg.veronaSpec;
