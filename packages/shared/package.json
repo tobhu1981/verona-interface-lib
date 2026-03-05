@@ -1,6 +1,6 @@
 {
   "name": "@verona/shared",
-  "version": "1.0.0",
+  "version": "1.0.0-beta",
   "description": "Shared utilities for Verona interfaces",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
