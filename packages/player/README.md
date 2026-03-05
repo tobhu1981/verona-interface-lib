@@ -19,37 +19,44 @@ npm pkg get veronaSpec
 
 Read and install all requirements in the **README.md** file of this MonoRepos in the root directory.
 
-### Install Dependencies
+### Dependencies
 
-If necessary:
+#### Install
 
 ```bash
 pnpm install
 ```
 
+#### Cleanup
+
+```bash
+pnpm clean
+```
+
 ### Development
 
-Include this Packages in your Verona-Module
+#### Build
 
-1. Build package
+Find more information about this [here](../../README.md) in the mono-repo documentation.
+
+1. Manual build package
 
 ```bash
 pnpm build
 ```
+#### Include a package in a verona-modul
 
-2. Navigate to the directory of the package you want to include in a Verona module and run:
+1. Navigate to the directory of the package you want to include in a Verona module and run:
 
 ```bash
 npm link
 ```
-3. Run in your Verona-Modul:
+2. Run in your Verona-Modul:
 
 ```bash
-npm link @verona/<package-name>
+npm link @verona/player
 ```
 Now you can find your verona-lib in node_modules named: @verona
-
-## Include in a verona module
 
 [**Here**](./PLAYER-INTEGRATION.md) is an example of how the player package is integrated into and used in the Verona module: Speedtest Player.
 

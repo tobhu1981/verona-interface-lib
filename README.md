@@ -19,39 +19,48 @@ Monorepo containing all Verona interface libraries for Player, Editor, Schemer, 
 - Node.js >= 18
 - pnpm >= 8
 
-### Install pnpm
+#### Install pnpm
 
 ```bash
 npm install -g pnpm
 ```
 
-### Install Dependencies
+#### Install dependencies
 
 ```bash
 pnpm install
 ```
 
-### Build All Packages
+### Building procedure
+
+**All packages:**
 
 ```bash
 pnpm build
 ```
 
-### Build Specific Package
+**Specific package:**
 
 ```bash
 pnpm --filter @verona/player build
 pnpm --filter @verona/editor build
 ```
-Or change in package and run:
+Or change in package folder and run:
 
 ```bash
 pnpm build
 ```
 
-### Include this Packages in your Verona-Module
+Every package uses the **shared** package. If you encounter problems creating a package with the message "...module '@verona/shared' not found," please create the shared package first.
 
-1. Build the package
+
+```bash
+pnpm --filter @verona/shared build
+```
+
+### Use packages in your verona-module
+
+1. Build the package. You can use automatic or manual creation for this.
 
 2. Navigate to the directory of the package you want to include in a Verona module and run:
 
@@ -63,16 +72,42 @@ npm link
 ```bash
 npm link @verona/<package-name>
 ```
-Now you can find your verona-lib in node_modules with the name: @verona
+
+**If you want more then one packages in your verona-modul:**
+
+If you try to include individual packages one after the other, the last package included will be overwritten! Therefore, the packages must be included in a single command.
+
+```bash
+npm link @verona/shared @verona/player @verona/editor @verona/widget
+```
+
+When automatic building is used, the changes are directly visible into the Verona module via a link.
+
+#### Automatic watch-mode
+
+Use automatic watch-mode `tsup --watch`. This has the advantage that changes to the local package are watched. A build is automatically generated and the link is updated. The change is then immediately visible in the included package of the Verona module. 
+
+Before you change something in your code, put in your cli:
+
+```bash
+cd verona-monorepo
+pnpm dev
+```
 
 ## Documentation
 
-Generate documentation for all packages:
+### Prerequisites
+
+Before generating documentation, run the build process! The documentation requires the **dist** folder, which is created by the build process.
+
+### Create documentation
+
+**for all packages:**
 
 ```bash
 pnpm docs
 ```
-Or generate documentation for a specific package:
+**for a specific package:**
 
 ```bash
 pnpm --filter @verona/<package-name> docs
