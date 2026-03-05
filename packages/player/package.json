@@ -18,7 +18,7 @@
     "dev": "tsup --watch",
     "clean": "rm -rf dist *.tsbuildinfo",
     "typecheck": "tsc --noEmit",
-    "docs": "typedoc --logLevel Error",
+    "docs:build": "typedoc --logLevel Error",
     "docs:serve": "npm run docs && npx serve docs"
   },
   "keywords": [

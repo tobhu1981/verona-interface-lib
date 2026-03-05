@@ -105,12 +105,12 @@ Before generating documentation, run the build process! The documentation requir
 **for all packages:**
 
 ```bash
-pnpm docs
+pnpm docs:build
 ```
 **for a specific package:**
 
 ```bash
-pnpm --filter @verona/<package-name> docs
+pnpm docs:<package-name>
 ```
 
 **For detailed documentation setup, see [here](./DOCUMENTATION.md)**
