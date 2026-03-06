@@ -4,7 +4,7 @@
 
 ```typescript
 
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
@@ -299,6 +299,17 @@ export class AppComponent implements OnInit, OnDestroy {
       this.veronaPlayer.sendUnitNavigationRequest('next');
     }
   }
+
+  @HostListener('window:blur')
+  onBlur(): void {
+    this.veronaPlayer.sendWindowFocusChanged(false);
+  }
+
+  @HostListener('window:focus')
+  onFocus(): void {
+    this.veronaPlayer.sendWindowFocusChanged(true);
+  }
+
 }
 
 ```

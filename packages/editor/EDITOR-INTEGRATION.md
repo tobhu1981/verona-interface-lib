@@ -1,344 +1,249 @@
-## Erprobung der Lib im Speedtest-Player
+## Erprobung der Lib im Speedtest-Editor
 
-**Ersetzungen in `app.component.ts`, `verona-api.service.ts` kann dann entfallen:**
+Ersetzungen in `app.component.ts` und `unit.service.ts`. `verona-api.service.ts` kann dann entfallen!
+
+**`app.component.ts`:**
 
 ```typescript
 
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButton } from '@angular/material/button';
-import { MatIcon } from '@angular/material/icon';
-import { FileService } from 'common/services/file.service';
-import { Unit } from 'common/interfaces/unit';
-import { UnitViewComponent } from './unit-view.component';
-
-// TODO: base64 encoding/decoding if host sends/accepts base64 encoded data
-import { VeronaPlayerApiService, StartCommandData, encodeBase64, decodeBase64, UnitState} from '@verona/player';
-
+import { ToolbarComponent } from './components/toolbar/toolbar.component';
+import { UnitService } from './services/unit.service';
+import { UnitViewComponent } from './components/unit-view.component';
+import { VeronaEditorApiService, StartCommandData } from '@verona/editor';
 
 @Component({
-  selector: 'speedtest-player',
-  imports: [CommonModule, UnitViewComponent, MatButton, MatIcon],
+  selector: 'speedtest-editor',
+  imports: [CommonModule, ToolbarComponent, UnitViewComponent],
   template: `
-    <button *ngIf="isStandalone" mat-raised-button class="load-button" (click)="upload.click()">
-      Unit laden
-      <mat-icon>file_upload</mat-icon>
-    </button>
-
-    <input type="file" hidden accept=".json, .voud" #upload
-           (change)="loadUnitFromFile($event.target)">
-
-    <speedtest-player-unit-view *ngIf="unit && unit.questions.length > 0 && !showOutroPage"
-                                [question]="unit.questions[activeQuestionIndex]"
-                                [unit]="unit"
-                                (responseGiven)="onResponse($event)">
-    </speedtest-player-unit-view>
-
-    <div *ngIf="showOutroPage" class="outro">
-      Keine weiteren Seiten. Weiterleitung zur nächsten Unit...
-    </div>
-  `,
-  styles: `
-    :host {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      height: 100vh;
-    }
-    .load-button {
-      position: absolute;
-      right: 0;
-    }
-    .outro {
-      margin: auto;
-      font-size: x-large;
-    }
+    <speedtest-toolbar *ngIf="isStandalone"
+                       (saveUnit)="unitService.saveUnitToFile()"
+                       (unitLoaded)="unitService.loadUnitDefinition($event)">
+    </speedtest-toolbar>
+    <speedtest-unit-view [unit]="unitService.unit"></speedtest-unit-view>
   `
 })
-
 export class AppComponent implements OnInit, OnDestroy {
-  private veronaPlayer!: VeronaPlayerApiService;
-
   isStandalone = window === window.parent;
-  unit: Unit | undefined;
-  activeQuestionIndex: number = 0;
-  activeQuestionStartTime: number = Date.now();
-  showOutroPage: boolean = false;
-  sumCorrect: number = 0;
-  sumWrong: number = 0;
+
+  private veronaEditor!: VeronaEditorApiService;
+
+  constructor(public unitService: UnitService) {}
 
   ngOnInit(): void {
-    this.initializeVeronaPlayer();
-  }
+    // Retrieve the JSON-LD metadata embedded in the HTML by the build toolchain
+    const metadata: string | null | undefined =
+      document.getElementById('verona-metadata')?.textContent;
 
-  ngOnDestroy(): void {
-    this.veronaPlayer.destroy();
-  }
-
-  /**
-   * Initialize Verona Player and register handlers
-   */
-  private initializeVeronaPlayer(): void {
-    // Get metadata from DOM
-    const metadata: string | null | undefined = document.getElementById('verona-metadata')?.textContent;
-    //console.log(VERONA_SPEC_VERSION);
-    this.veronaPlayer = new VeronaPlayerApiService({
-      debug: true,
+    this.veronaEditor = new VeronaEditorApiService({
+      debug: !this.isStandalone, // useful during host-frame integration
       allowedOrigin: '*'
     });
 
-    // Register start handler before sendReady command
-    this.veronaPlayer.onStartCommand((command: StartCommandData) => {
-    if (!command.unitDefinition) return;
-      
-    this.resetUnitState();
-      
-    // Wait for child component to be destroyed
-    setTimeout(() => {
-      this.unit = JSON.parse(command.unitDefinition!) as Unit;
-      
-      // Restore previous state if available
-      if (command.unitState?.dataParts !== undefined && Object.keys(command.unitState.dataParts).length > 0) {
-        this.restoreState(command.unitState);
+     // UnitService Zugriff auf den Editor-Service geben,
+    // damit er Änderungen selbst an den Host melden kann
+    this.unitService.setEditor(this.veronaEditor);
+
+    // Register the start-command handler BEFORE sending the ready notification
+    this.veronaEditor.onStartCommand((command: StartCommandData) => {
+      if (command.unitDefinition) {
+        this.unitService.loadUnitDefinition(command.unitDefinition);
       }
-      
-      // Check if unit is already complete
-      if (this.activeQuestionIndex >= this.unit!.questions.length) {
-        this.showOutroPage = true;
-      }
-      
-      // Send initial state
-      this.sendEmptyState();
-      });
     });
 
-    // Send ready notification
-    this.veronaPlayer.sendReady({
+    // Announce that the editor is ready to receive commands
+    this.veronaEditor.sendReady({
       metadata: metadata ? JSON.parse(metadata) : {}
     });
   }
 
-  /**
-   * Load unit from file (standalone mode)
-   */
-  async loadUnitFromFile(eventTarget: EventTarget | null): Promise<void> {
-    this.resetUnitState();
-    const loadedUnit = await FileService.readFileAsText(
-      (eventTarget as HTMLInputElement).files?.[0] as File
-    );
-    this.unit = JSON.parse(loadedUnit);
-  }
-
-  /**
-   * Reset all unit state
-   */
-  private resetUnitState(): void {
-    this.unit = undefined;
-    this.activeQuestionIndex = 0;
-    this.activeQuestionStartTime = Date.now();
-    this.showOutroPage = false;
-    this.sumCorrect = 0;
-    this.sumWrong = 0;
-  }
-  
-  /**
-   * Restore state from previous session
-   */
-  private restoreState(unitState: UnitState): void {
-    if (!unitState.dataParts) return;
-
-    try {
-      // Restore active question index
-      if (unitState.dataParts['activeQuestionIndex']) {
-        // TODO: Base64 decoding if host sends base64 encoded data
-        // decodeBase64<Array<{value: number}>>(unitState.dataParts['activeQuestionIndex']);
-        const data = JSON.parse(unitState.dataParts['activeQuestionIndex']) as Array<{value: number}>;
-        // Add 1 because activeQuestionIndex has already been seen and answered
-        this.activeQuestionIndex = Number(data[0].value) + 1;
-      }
-      // Restore sums
-      if (unitState.dataParts['sums']) {
-        // TODO: Base64 decoding if host sends base64 encoded data
-        // const data = decodeBase64<Array<{id: string, value: number}>>(unitState.dataParts['sums']);
-        const data = JSON.parse(unitState.dataParts['sums']) as Array<{id: string, value: number}>;
-        this.sumCorrect = Number(data[0].value);
-        this.sumWrong = Number(data[1].value);
-      }
-  } catch (error) {
-      console.error('Error restoring state:', error);
-    }
-  }
-
-  /**
-   * Handle user response
-   */
-  onResponse(answer: number | number[]) {
-    const isCorrect = this.getIsCorrect(
-      answer, 
-      this.unit?.questions[this.activeQuestionIndex].correctAnswer
-    );
-    
-    if (isCorrect !== undefined) {
-      this.updateResultSums(isCorrect);
-    }
-    
-    // Send state via Verona Lib
-    this.sendResponseState(answer, isCorrect);
-    this.gotoNextQuestion();
-  }
-
-  /**
-   * Check if answer is correct
-   */
-  private getIsCorrect(
-    answer: number | number[],
-    correctAnswer: number | number[] | undefined
-  ): boolean | undefined {
-    if (correctAnswer === undefined) return undefined;
-    return JSON.stringify(answer) === JSON.stringify(correctAnswer);
-  }
-
-  /**
-   * Update result sums
-   */
-  private updateResultSums(isCorrect: boolean): void {
-    isCorrect ? this.sumCorrect += 1 : this.sumWrong += 1;
-  }
-
-  /**
-   * Send response state to host
-   */
-  private sendResponseState(answerValue: number | number[], isCorrect?: boolean): void {
-    const code = isCorrect === undefined ? undefined : (isCorrect ? 1 : 0);
-
-    // Prepare response data for current question
-    const questionResponse = [
-      {
-        id: 'value',
-        status: 'CODING_COMPLETE',
-        value: answerValue,
-        subform: String(this.activeQuestionIndex),
-        code: code,
-        score: code
-      },
-      {
-        id: 'time',
-        status: 'VALUE_CHANGED',
-        value: Date.now() - this.activeQuestionStartTime,
-        subform: String(this.activeQuestionIndex)
-      }
-    ];
-
-    // Prepare sums
-    const sums = [
-      {
-        id: 'total_correct',
-        status: 'VALUE_CHANGED',
-        value: this.sumCorrect
-      },
-      {
-        id: 'total_wrong',
-        status: 'VALUE_CHANGED',
-        value: this.sumWrong
-      }
-    ];
-
-    // Prepare active question index
-    const activeIndex = [{
-      id: 'activeQuestionIndex',
-      status: 'VALUE_CHANGED',
-      value: this.activeQuestionIndex
-    }];
-
-    // Create UnitState with base64 encoded data
-    const unitState: UnitState = {
-      dataParts: {
-        [`question_${this.activeQuestionIndex}`]: JSON.stringify(questionResponse),
-        'sums': JSON.stringify(sums),
-        'activeQuestionIndex': JSON.stringify(activeIndex)
-        // TODO: base64 encoding/decoding if host sends/accepts base64 encoded data
-        //`question_${this.activeQuestionIndex}`]: encodeBase64(questionResponse),
-        //'sums': encodeBase64(sums),
-        //'activeQuestionIndex': encodeBase64(activeIndex)
-      },
-      presentationProgress: 'complete',
-      responseProgress: 'complete',
-      unitStateDataType: 'iqb-standard@1.0'
-    };
-
-    // Send via Verona Player
-    this.veronaPlayer.sendStateChanged(unitState);
-  }
-
-  /**
-   * Send empty initial state
-   */
-  private sendEmptyState(): void {
-    const unitState: UnitState = {
-      unitStateDataType: 'iqb-standard@1.0',
-      presentationProgress: 'complete',
-      responseProgress: 'none',
-      dataParts: {}
-    };
-
-    this.veronaPlayer.sendStateChanged(unitState);
-  }
-
-  /**
-   * Navigate to next question or finish
-   */
-  private gotoNextQuestion(): void {
-    if (!this.unit) throw Error();
-    
-    if (this.unit.questions.length > this.activeQuestionIndex + 1) {
-      this.activeQuestionIndex += 1;
-      this.activeQuestionStartTime = Date.now();
-    } else {
-      this.showOutroPage = true;
-      // Request navigation to next unit
-      this.veronaPlayer.sendUnitNavigationRequest('next');
-    }
+  ngOnDestroy(): void {
+    this.veronaEditor.destroy();
   }
 }
 
 ```
 
+**`unit.service.ts`:**
+
+```typescript
+
+import { Injectable } from '@angular/core';
+//import { VariableInfo } from '@iqb/responses';
+import packageInfo from 'packageInfo';
+import { Unit } from 'common/interfaces/unit';
+import { FileService } from 'common/services/file.service';
+import * as csvParser from 'editor/src/app/services/csv-parser';
+import { MessageService } from 'editor/src/app/services/message.service';
+import { VeronaEditorApiService, MainSchema } from '@verona/editor';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class UnitService {
+  unitDefVersion = packageInfo.config.unit_definition_version;
+  unit: Unit = {
+    type: 'speedtest-unit-defintion',
+    version: this.unitDefVersion,
+    buttonWidth: 350,
+    questions: [],
+    layout: 'column',
+    questionType: 'text',
+    answerType: 'text'
+  };
+
+  missingCorrectAnswerIndices: number[] = [];
+
+  private veronaEditor: VeronaEditorApiService | null = null;
+
+  constructor(private messageService: MessageService) { }
+
+  /**
+   * Wird von der AppComponent nach der Initialisierung des VeronaEditorApiService
+   * aufgerufen, damit der UnitService Änderungen an den Host melden kann.
+   */
+  setEditor(editor: VeronaEditorApiService): void {
+    this.veronaEditor = editor;
+  }
+
+  loadUnitDefinition(unitDefinition: string): void {
+    if (unitDefinition) {
+      const parsedUnit = JSON.parse(unitDefinition);
+      const readMajor = parsedUnit.version.split('.')[0];
+      const currentMajor = this.unitDefVersion.split('.')[0];
+      if (readMajor !== currentMajor) {
+        this.messageService.showError('Inkompatible Unit-Version festgestellt.');
+        return;
+      }
+      this.unit = parsedUnit;
+    }
+  }
+
+  saveUnitToFile(): void {
+    FileService.saveUnitToFile(UnitService.stringifyUnit(this.unit));
+  }
+
+  loadUnitFromCSV(unitString: string) {
+    this.unit = {
+      type: 'speedtest-unit-defintion',
+      version: this.unitDefVersion,
+      layout: this.unit.layout,
+      questions: csvParser.parseQuestions(unitString, this.unit.questionType, this.unit.multipleSelection),
+      questionType: this.unit.questionType,
+      answerType: this.unit.answerType,
+      multipleSelection: this.unit.multipleSelection
+    };
+    this.updateUnitDef();
+  }
+
+  updateUnitDef(): void {
+    this.veronaEditor?.sendDefinitionChanged(
+      UnitService.stringifyUnit(this.unit),
+      'speedtest-unit-definition@1.0.0',
+      UnitService.getVariableInfo()
+    );
+  }
+
+  private static stringifyUnit(unit: Unit): string {
+    return JSON.stringify(unit, (key, value) => {
+      if (unit.answerType === 'number' && key === 'answers') {
+        return undefined;
+      }
+      return value;
+    });
+  }
+
+// 'valuePositionLabels' is optional in 'MainSchema.VariableInfo', 
+// so it can simply be omitted instead of passing an empty array 
+// that does not match the expected type anyway.
+  static getVariableInfo(useMultiSelect: boolean = false): MainSchema.VariableInfo[] {
+    return [
+      {
+        id: 'value',
+        alias: 'value',
+        type: 'integer',
+        format: '',
+        multiple: useMultiSelect,
+        nullable: false,
+        values: [],
+        valuesComplete: true
+      },
+      {
+        id: 'time',
+        alias: 'time',
+        type: 'integer',
+        format: '',
+        multiple: false,
+        nullable: false,
+        values: [],
+        valuesComplete: true
+      },
+      {
+        id: 'activeQuestionIndex',
+        alias: 'activeQuestionIndex',
+        type: 'no-value',
+        format: '',
+        multiple: false,
+        nullable: false,
+        values: [],
+        valuesComplete: true
+      },
+      {
+        id: 'total_correct',
+        alias: 'total_correct',
+        type: 'integer',
+        format: '',
+        multiple: false,
+        nullable: false,
+        values: [],
+        valuesComplete: true
+      },
+      {
+        id: 'total_wrong',
+        alias: 'total_wrong',
+        type: 'integer',
+        format: '',
+        multiple: false,
+        nullable: false,
+        values: [],
+        valuesComplete: true
+      }
+    ];
+  }
+
+  addAnswer(questionIndex: number, answerText: string) {
+    this.unit.questions[questionIndex].answers.push({ text: answerText });
+    this.updateUnitDef();
+  }
+
+  deleteAnswer(questionIndex: number, answerIndex: number) {
+    this.unit.questions[questionIndex].answers.splice(answerIndex, 1);
+    this.updateUnitDef();
+    this.calculateMissingCorrectAnswerIndeces();
+  }
+
+  calculateMissingCorrectAnswerIndeces(): void {
+    this.missingCorrectAnswerIndices = this.unit.questions
+      .map((question, index) => {
+        return question.correctAnswer === undefined ||
+               (Array.isArray(question.correctAnswer) && question.correctAnswer.length === 0) ?
+          index : -1;
+      })
+      .filter(index => index !== -1)
+      .map(index => index + 1);
+    if (this.missingCorrectAnswerIndices.length > 0) {
+      this.messageService.showPermanently(
+        `Es fehlen Lösungen für mindestens folgende Fragen:
+                    ${this.missingCorrectAnswerIndices.slice(0, 9).join(', ')}`
+      );
+    } else {
+      this.messageService.hideMessage();
+    }
+  }
+}
+```
+
 ## Ergebnisse der Erprobung
 
-**Folgende Handshakes zwischen Player und Host wurden bisher getestet:**
-
-**`vopReadyNotification`**
-
-* `metadata`
-
-**`vopStartCommand`**
-
-* `sessionId`
-* `unitDefinition` -> Aufgaben werden wiedergegeben
-* `unitDefinitionType` -> wird im Speedtest-Player nicht benutzt
-* `unitState` 
-    * `dataParts` -> Wiederherstellung einer bereits abgespielten Aufgabe konnte im Speedtest-Player nicht ausreichend getestet werden 
-    * `presentationProgress`, `responseProgress` -> wurde im Speedtest-Player zwar entsprechend gesetzt, müsste aber in Aspect-Aufgaben noch ausführlich geprüft werden
-    * `unitStateDataType` -> Wird, soweit ich das sehe, im Speedtest-Player nicht verwendet.
-* `playerConfig` -> wird im Speedtest-Player nicht abgerufen
-
-**`vopStateChangedNotification`**
-
-* `sessionId`
-* `timeStamp`
-* `unitState` 
-    * `dataParts` -> Responses und Logs werden genau so geschrieben, wie im Speedtest-Player Code ohne die neue Lib
-    * `presentationProgress`, `responseProgress` -> wurde im Speedtest-Player zwar entsprechend gesetzt, müsste aber in Aspect-Aufgaben noch ausführlich geprüft 
-    * `unitStateDataType`
-* * `playerConfig` -> wird im Speedtest-Player nicht gesendet
-
-**Es wurde noch nicht getestet:**
-
-* `vopPageNavigationCommand`
-* `vopUnitNavigationRequestedNotification`
-* `vopNavigationDeniedNotification`
-* `vopPlayerConfigChangedNotification`
-* `vopRuntimeErrorNotification`
-* `vopWidgetCall`
-* `vopWidgetReturn`
-* `vopWindowFocusChangedNotification`
+Editor hat gleiche Funktionalität im Studio wie zuvor. Die Aufgabenvorschau arbeitet auch wie gewohnt.
