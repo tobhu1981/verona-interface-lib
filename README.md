@@ -60,7 +60,7 @@ pnpm --filter @verona/shared build
 
 ### Use packages in your verona-module
 
-1. Build the package. You can use automatic or manual creation for this.
+1. Build the package in the mono-repo. You can use automatic (watch-mode) or manual creation for this.
 
 2. Navigate to the directory of the package you want to include in a Verona module and run:
 
@@ -78,12 +78,12 @@ npm link @verona/<package-name>
 If you try to include individual packages one after the other, the last package included will be overwritten! Therefore, the packages must be included in a single command.
 
 ```bash
-npm link @verona/shared @verona/player @verona/editor @verona/widget
+npm link @verona/player @verona/editor @verona/widget
 ```
 
 When automatic building is used, the changes are directly visible into the Verona module via a link.
 
-#### Automatic watch-mode
+#### Watch-mode for automatic builds
 
 Use automatic watch-mode `tsup --watch`. This has the advantage that changes to the local package are watched. A build is automatically generated and the link is updated. The change is then immediately visible in the included package of the Verona module. 
 
@@ -105,12 +105,19 @@ Before generating documentation, run the build process! The documentation requir
 **for all packages:**
 
 ```bash
-pnpm docs:build
+pnpm doc:build
 ```
 **for a specific package:**
 
 ```bash
-pnpm docs:<package-name>
+cd root
+pnpm doc:<package-name>
+```
+or
+
+```bash
+cd package
+pnpm doc
 ```
 
 **For detailed documentation setup, see [here](./DOCUMENTATION.md)**
