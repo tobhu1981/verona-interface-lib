@@ -24,17 +24,17 @@ Die Library implementiert die **Verona Player Specification 6.1.1** und ermögli
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │        @verona-interfaces/player Library               │ │
 │  │                                                        │ │
-│  │  • VeronaPlayerApiService (Kommunikation)             │ │
-│  │  • Types (TypeScript Definitionen)                    │ │
-│  │  • Utils (Encoding, Validation, Factory)              │ │
+│  │  • VeronaPlayerApiService (Kommunikation)              │ │
+│  │  • Types (TypeScript Definitionen)                     │ │
+│  │  • Utils (Encoding, Validation, Factory)               │ │
 │  └────────────────────────────────────────────────────────┘ │
-│                                                              │
+│                                                             │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │           Deine Player-Logik (z.B. Angular)           │ │
+│  │           Player-Logik (z.B. Angular)                  │ │
 │  │                                                        │ │
-│  │  • UI-Komponenten (Aufgabenanzeige)                   │ │
-│  │  • State Management (Antworten, Navigation)           │ │
-│  │  • Business Logic                                     │ │
+│  │  • UI-Komponenten (Aufgabenanzeige)                    │ │
+│  │  • State Management (Antworten, Navigation)            │ │
+│  │  • Business Logic                                      │ │
 │  └────────────────────────────────────────────────────────┘ │
 └───────────────────────┬─────────────────────────────────────┘
                         │
