@@ -50,23 +50,23 @@ jobs:
           mkdir -p gh-pages
           
           # Copy player doc
-          if [ -d "packages/player/doc" ]; then
-            cp -r packages/player/doc gh-pages/player
+          if [ -d "packages/player/docs" ]; then
+            cp -r packages/player/docs gh-pages/player
           fi
           
           # Copy editor docs
-          if [ -d "packages/editor/doc" ]; then
-            cp -r packages/editor/doc gh-pages/editor
+          if [ -d "packages/editor/docs" ]; then
+            cp -r packages/editor/docs gh-pages/editor
           fi
           
           # Copy schemer docs
-          if [ -d "packages/schemer/doc" ]; then
-            cp -r packages/schemer/doc gh-pages/schemer
+          if [ -d "packages/schemer/docs" ]; then
+            cp -r packages/schemer/docs gh-pages/schemer
           fi
           
           # Copy widget docs
-          if [ -d "packages/widget/doc" ]; then
-            cp -r packages/widget/doc gh-pages/widget
+          if [ -d "packages/widget/docs" ]; then
+            cp -r packages/widget/docs gh-pages/widget
           fi
           
           # Read versions dynamically from package.json
