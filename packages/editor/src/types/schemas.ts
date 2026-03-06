@@ -21,7 +21,7 @@ export namespace SubSchema {
 
    /**  @public*/
   export interface valuePositionLabels {
-    Items: string;
+    Items: string[];
   }
 }
 
