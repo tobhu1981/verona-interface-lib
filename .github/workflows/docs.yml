@@ -138,25 +138,7 @@ jobs:
           </body>
           </html>
           EOF
-
-      - name: Copy player docs
-        run: |
-          if [ -d "packages/player/docs" ]; then
-            cp -r packages/player/docs gh-pages/player
-            echo "Player docs copied"
-          else
-            echo "Player docs not found"
-          fi
-
-      - name: Copy editor docs
-        run: |
-          if [ -d "packages/editor/docs" ]; then
-            cp -r packages/editor/docs gh-pages/editor
-            echo "Editor docs copied"
-          else
-            echo "Editor docs not found"
-          fi
-   
+       
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4
         with:
