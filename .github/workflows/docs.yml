@@ -44,7 +44,16 @@ jobs:
           pnpm --filter @verona/editor doc || echo "Editor docs skipped"
           pnpm --filter @verona/schemer doc || echo "Schemer docs skipped"
           pnpm --filter @verona/widget doc || echo "Widget docs skipped"
-        
+
+      - name: Debug - List generated files
+        run: |
+          echo "Player docs:"
+          ls -la packages/player/ || echo "player dir not found"
+          echo "Editor docs:"
+          ls -la packages/editor/ || echo "editor dir not found"
+          echo "gh-pages:"
+          ls -la gh-pages/ || echo "gh-pages dir not found"  
+          
       - name: Prepare docs directory
         run: |
           mkdir -p gh-pages
