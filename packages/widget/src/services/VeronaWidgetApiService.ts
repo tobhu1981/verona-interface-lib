@@ -68,7 +68,8 @@ export interface ReturnRequestedData
  * // 1. Instantiate
  * const widget = new VeronaWidgetApiService({ debug: true });
  *
- * // 2. Register handler BEFORE sendReady()
+ * // 2. Optionally register handler for start command BEFORE sendReady()
+ * //    (not all widgets require a start command)
  * widget.onStartCommand((cmd) => {
  *   restoreState(cmd.state);
  * });
@@ -76,10 +77,10 @@ export interface ReturnRequestedData
  * // 3. Announce readiness
  * widget.sendReady({ metadata: JSON.stringify(meta) });
  *
- * // 4. Send state changes
+ * // 4. Optionally send intermediate state changes
  * widget.sendStateChanged(state, sharedParameters);
  *
- * // 5. Request closing the widget dialog
+ * // 5. Request closing the widget dialog (save or cancel)
  * widget.sendReturnRequested(state, sharedParameters, saveState);
  *
  * // 6. Cleanup (e.g. in ngOnDestroy)
@@ -116,6 +117,10 @@ export class VeronaWidgetApiService {
    * Send `vowReadyNotification` to the host.
    * Call this **after** registering all handlers (especially `onStartCommand`).
    *
+   * After this notification the host *may* send a `vowStartCommand` – but this
+   * is not guaranteed. Some widgets (e.g. a static display) do not require a
+   * start command to function.
+   *
    * @param data - Notification payload (metadata string required by spec)
    * @public
    */
@@ -126,9 +131,13 @@ export class VeronaWidgetApiService {
   /**
    * Send `vowStateChangedNotification` to the host whenever the widget state changes.
    *
-   * Requires an active session (i.e. `onStartCommand` must have fired first).
+   * Sending this notification is **optional** – it is only useful when intermediate
+   * save-points are desired (e.g. for logging). The host uses `timeStamp` to
+   * establish the correct ordering of asynchronously arriving messages.
    *
-   * @param state            - Serialised widget state (base64)
+   * Requires an active session (i.e. `onStartCommand` must have fired with a `sessionId`).
+   *
+   * @param state            - Serialised widget state (string). Format is widget-specific.
    * @param sharedParameters - Optional shared parameters
    * @public
    */
@@ -154,11 +163,13 @@ export class VeronaWidgetApiService {
   /**
    * Send `vowReturnRequested` to the host to request closing the widget dialog.
    *
-   * Requires an active session (i.e. `onStartCommand` must have fired first).
+   * Requires an active session (i.e. `onStartCommand` must have fired with a `sessionId`).
    *
-   * @param state            - Serialised widget state (base64)
+   * @param state            - Serialised widget state (string). Format is widget-specific.
    * @param sharedParameters - Optional shared parameters
-   * @param saveState        - If true, host is requested to send final state to player. Default: true
+   * @param saveState        - Controls whether the state changes should be applied (saved) by the
+   *                           host, or discarded. `true` means "save & close", `false` means
+   *                           "cancel / close without saving". Default: `true`
    * @public
    */
   sendReturnRequested(
@@ -189,7 +200,11 @@ export class VeronaWidgetApiService {
   /**
    * Register a handler for `vowStartCommand`.
    *
-   * The session ID is stored automatically before your callback is called.
+   * Registering this handler is **optional** – not all widgets require a start
+   * command (e.g. a static display with no data dependency). When a command
+   * arrives, the session ID (if present) is stored automatically before your
+   * callback is invoked.
+   *
    * Register this handler **before** calling `sendReady()`.
    *
    * @param callback - Called with the full start-command payload
@@ -197,12 +212,11 @@ export class VeronaWidgetApiService {
    */
   onStartCommand(callback: (data: StartCommandData) => void): void {
     this.on(VeronaOperations.START_COMMAND, (data: StartCommandData) => {
+      // sessionId is optional in the spec – a widget may be called without one
       if (data.sessionId) {
         this.sessionId = data.sessionId;
-        callback(data);
-      } else {
-        this.warn('Received vowStartCommand without sessionId – ignoring.');
       }
+      callback(data);
     });
   }
 
