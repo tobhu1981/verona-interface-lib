@@ -1,6 +1,6 @@
 // ============================================================================
 // @verona/interfaces
-// TypeScript Library für Verona Player und Editor Interfaces
+// TypeScript Library für Verona Player
 // ============================================================================
 
 // Constants (not exported by default, use specific imports if needed)
