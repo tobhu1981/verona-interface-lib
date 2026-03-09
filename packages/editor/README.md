@@ -1,6 +1,4 @@
-
-
-# Verona Editor Interface Library (Spec 3.5.0)
+# Verona Editor Interface Library
 
 **Es handelt sich um eine Beta-Version!**
 
