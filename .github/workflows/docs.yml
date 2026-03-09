@@ -129,6 +129,12 @@ jobs:
               <p>Verona Editor Interface - Communication between editor and host.</p>
               <a href="./editor/index.html">View Documentation →</a>
             </div>
+
+             <div class="package">
+              <h2>@verona/widget <span class="badge">Spec $WIDGET_VERSION</span></h2>
+              <p>Verona Widget Interface - Communication between widget and host.</p>
+              <a href="./widget/index.html">View Documentation →</a>
+            </div>
             
             <hr>
             <p><small>
