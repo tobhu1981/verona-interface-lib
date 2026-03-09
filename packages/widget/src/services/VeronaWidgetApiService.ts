@@ -1,5 +1,5 @@
 // ============================================================================
-// VERONA EDITOR API SERVICE
+// VERONA WIDGET API SERVICE
 // ============================================================================
 
 import { isVeronaMessage, VeronaMessage } from '@verona/shared';
@@ -30,55 +30,65 @@ export interface VeronaWidgetOptions {
  * @public
  */
 export interface ReadyNotificationData
-  extends PayloadInterfacesProperties.EditorSend.ReadyNotificationData {}
+  extends PayloadInterfacesProperties.WidgetSend.ReadyNotification {}
 
 /**
  * Data received from host via start command
  * @public
  */
 export interface StartCommandData
-  extends PayloadInterfacesProperties.EditorReceive.StartCommand {
+  extends PayloadInterfacesProperties.WidgetReceive.StartCommand {
   type: typeof VeronaOperations.START_COMMAND;
 }
 
 /**
- * Data for the definition-changed notification sent to host
+ * Data for the state-changed notification sent to host
  * @public
  */
-export interface DefinitionChangedNotificationData
-  extends PayloadInterfacesProperties.EditorSend.DefinitionChangedNotification {}
+export interface StateChangedNotificationData
+  extends PayloadInterfacesProperties.WidgetSend.StateChangedNotification {}
+
+/**
+ * Data for the return-requested notification sent to host
+ * @public
+ */
+export interface ReturnRequestedData
+  extends PayloadInterfacesProperties.WidgetSend.ReturnRequested {}
 
 // ============================================================================
 // SERVICE CLASS
 // ============================================================================
 
 /**
- * Verona Editor Interface
- * Handles communication between editor and host application.
+ * Verona Widget Interface
+ * Handles communication between widget and host application.
  *
  * ### Lifecycle
  * ```typescript
  * // 1. Instantiate
- * const editor = new VeronaEditorApiService({ debug: true });
+ * const widget = new VeronaWidgetApiService({ debug: true });
  *
  * // 2. Register handler BEFORE sendReady()
- * editor.onStartCommand((cmd) => {
- *   loadUnit(cmd.unitDefinition);
+ * widget.onStartCommand((cmd) => {
+ *   restoreState(cmd.state);
  * });
  *
  * // 3. Announce readiness
- * editor.sendReady({ metadata: JSON.stringify(meta) });
+ * widget.sendReady({ metadata: JSON.stringify(meta) });
  *
- * // 4. Send changes whenever the unit definition changes
- * editor.sendDefinitionChanged(unitDefString, 'my-editor@1.0', variables);
+ * // 4. Send state changes
+ * widget.sendStateChanged(state, sharedParameters);
  *
- * // 5. Cleanup (e.g. in ngOnDestroy)
- * editor.destroy();
+ * // 5. Request closing the widget dialog
+ * widget.sendReturnRequested(state, sharedParameters, saveState);
+ *
+ * // 6. Cleanup (e.g. in ngOnDestroy)
+ * widget.destroy();
  * ```
  *
  * @public
  */
-export class VeronaEditorApiService {
+export class VeronaWidgetApiService {
   private readonly messageHandlers: Map<string, Set<Function>> = new Map();
   private sessionId: string | null = null;
   private readonly debug: boolean;
@@ -103,7 +113,7 @@ export class VeronaEditorApiService {
   // ============================================================================
 
   /**
-   * Send `voeReadyNotification` to the host.
+   * Send `vowReadyNotification` to the host.
    * Call this **after** registering all handlers (especially `onStartCommand`).
    *
    * @param data - Notification payload (metadata string required by spec)
@@ -114,41 +124,62 @@ export class VeronaEditorApiService {
   }
 
   /**
-   * Send `voeDefinitionChangedNotification` to the host whenever the unit
-   * definition has changed (e.g. after every editor action that modifies it).
+   * Send `vowStateChangedNotification` to the host whenever the widget state changes.
    *
    * Requires an active session (i.e. `onStartCommand` must have fired first).
    *
-   * @param unitDefinition    - Serialised unit definition (plain JSON string or base64)
-   * @param unitDefinitionType - Optional MIME/type identifier
-   * @param variables          - Optional variable metadata
-   * @param dependencies       - Optional file/service dependencies
-   * @param dependenciesToPlay - Optional subset of dependencies needed by the player
+   * @param state            - Serialised widget state (base64)
+   * @param sharedParameters - Optional shared parameters
    * @public
    */
-  sendDefinitionChanged(
-  unitDefinition: string,
-  unitDefinitionType?: string,
-  variables?: MainSchema.VariableInfo[],
-  dependenciesToPlay?: MainSchema.Dependency[],
-  dependenciesToEdit?: MainSchema.Dependency[]
+  sendStateChanged(
+    state?: string,
+    sharedParameters?: MainSchema.SharedParameter[]
   ): void {
     if (!this.sessionId) {
-      this.warn('Cannot send voeDefinitionChangedNotification: no active session (sessionId missing). Did the host send voeStartCommand?');
+      this.warn('Cannot send vowStateChangedNotification: no active session. Did the host send vowStartCommand?');
       return;
     }
 
-    const data: DefinitionChangedNotificationData = {
-    sessionId: this.sessionId,
-    timeStamp: new Date().toISOString(),
-    unitDefinition,
-    unitDefinitionType,
-    variables,
-    dependenciesToPlay,
-    dependenciesToEdit
-  };
+    const data: StateChangedNotificationData = {
+      sessionId: this.sessionId,
+      timeStamp: new Date().toISOString(),
+      state,
+      sharedParameters
+    };
 
     this.postMessage(VeronaOperations.STATE_CHANGED_NOTIFICATION, data);
+  }
+
+  /**
+   * Send `vowReturnRequested` to the host to request closing the widget dialog.
+   *
+   * Requires an active session (i.e. `onStartCommand` must have fired first).
+   *
+   * @param state            - Serialised widget state (base64)
+   * @param sharedParameters - Optional shared parameters
+   * @param saveState        - If true, host is requested to send final state to player. Default: true
+   * @public
+   */
+  sendReturnRequested(
+    state?: string,
+    sharedParameters?: MainSchema.SharedParameter[],
+    saveState: boolean = true
+  ): void {
+    if (!this.sessionId) {
+      this.warn('Cannot send vowReturnRequested: no active session. Did the host send vowStartCommand?');
+      return;
+    }
+
+    const data: ReturnRequestedData = {
+      sessionId: this.sessionId,
+      timeStamp: new Date().toISOString(),
+      state,
+      sharedParameters,
+      saveState
+    };
+
+    this.postMessage(VeronaOperations.RETURN_REQUESTED, data);
   }
 
   // ============================================================================
@@ -156,7 +187,7 @@ export class VeronaEditorApiService {
   // ============================================================================
 
   /**
-   * Register a handler for `voeStartCommand`.
+   * Register a handler for `vowStartCommand`.
    *
    * The session ID is stored automatically before your callback is called.
    * Register this handler **before** calling `sendReady()`.
@@ -170,7 +201,7 @@ export class VeronaEditorApiService {
         this.sessionId = data.sessionId;
         callback(data);
       } else {
-        this.warn('Received voeStartCommand without sessionId – ignoring.');
+        this.warn('Received vowStartCommand without sessionId – ignoring.');
       }
     });
   }
@@ -181,7 +212,7 @@ export class VeronaEditorApiService {
 
   /**
    * Remove the global `message` event listener and clear all handlers.
-   * Call this when the editor component is destroyed (e.g. `ngOnDestroy`).
+   * Call this when the widget component is destroyed (e.g. `ngOnDestroy`).
    * @public
    */
   public destroy(): void {
@@ -190,7 +221,7 @@ export class VeronaEditorApiService {
     this.sessionId = null;
 
     if (this.debug) {
-      console.log('[VeronaEditor] Destroyed');
+      console.log('[VeronaWidget] Destroyed');
     }
   }
 
@@ -207,7 +238,7 @@ export class VeronaEditorApiService {
     this.targetWindow.postMessage(message, this.allowedOrigin);
 
     if (this.debug) {
-      console.log('[VeronaEditor] Sent:', message);
+      console.log('[VeronaWidget] Sent:', message);
     }
   }
 
@@ -223,16 +254,15 @@ export class VeronaEditorApiService {
     }
 
     if (!isVeronaMessage(event.data)) {
-      return; // silently ignore non-Verona messages (e.g. devtools, HMR, …)
+      return;
     }
 
     const data = event.data;
 
     if (this.debug) {
-      console.log('[VeronaEditor] Received:', data);
+      console.log('[VeronaWidget] Received:', data);
     }
 
-    // Once a session is established, reject messages with a wrong sessionId
     if (this.sessionId && data.sessionId && data.sessionId !== this.sessionId) {
       this.warn(`SessionId mismatch: expected "${this.sessionId}", got "${data.sessionId}" – ignored.`);
       return;
@@ -261,7 +291,7 @@ export class VeronaEditorApiService {
    */
   private warn(message: string): void {
     if (this.debug) {
-      console.warn('[VeronaEditor]', message);
+      console.warn('[VeronaWidget]', message);
     }
   }
 }
