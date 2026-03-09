@@ -8,13 +8,13 @@ import pkg from '../package.json';
 export const DEFAULT_TARGET_ORIGIN = '*';
 
 /**
- * NPM package version of @verona/player library
+ * NPM package version of @verona/widget library
  * @public
  */
 export const PACKAGE_VERSION = pkg.version;
 
 /**
- * Verona Editor Specification version
+ * Verona Widget Specification version implemented by this library
  * @public
  */
 export const VERONA_SPEC_VERSION = pkg.veronaSpec;
