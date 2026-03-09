@@ -5,7 +5,7 @@
 import { VeronaOperationId } from './operations';
 
 /**
- * Base structure for all Verona messages.
+ * Base structure for all Verona Widget messages.
  * @public
  */
 export interface VeronaMessage {
