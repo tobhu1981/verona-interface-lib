@@ -11,6 +11,7 @@
     "doc:build": "pnpm --filter @verona/player doc && pnpm --filter @verona/editor doc",
     "doc:player": "pnpm --filter @verona/player doc",
     "doc:editor": "pnpm --filter @verona/editor doc",
+    "doc:widget": "pnpm --filter @verona/widget doc",
     "doc:combined": "typedoc",
     "doc:serve": "pnpm doc:combined && npx serve docs",
     "publish:all": "pnpm -r publish",
