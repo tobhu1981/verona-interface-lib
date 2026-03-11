@@ -10,7 +10,10 @@ Monorepo containing all Verona interface libraries for Player, Editor, Schemer, 
 |---------|---------|--------------|-------------|
 | [@verona/shared](./packages/shared) | 1.0.0 | - | Shared utilities and Player Interface |
 | [@verona/editor](./packages/editor) | 1.0.0-beta | 3.5.0 | Verona Editor Interface |
-| [@verona/player](./packages/player) | 1.0.0-beta | 6.1.1 | Verona 
+| [@verona/player](./packages/player) | 1.0.0-beta | 6.1.1 | Verona Player Interface |
+| [@verona/widget](./packages/widget) | 1.0.0-beta | 1.0.0 | Verona widget Interface |
+| [@verona/schemer](./packages/schemer) | 1.0.0-beta | 3.2.0 | Verona schemer Interface |
+
 
 ## Getting Started
 
@@ -42,8 +45,7 @@ pnpm build
 **Specific package:**
 
 ```bash
-pnpm --filter @verona/player build
-pnpm --filter @verona/editor build
+pnpm --filter @verona/<package> build
 ```
 Or change in package folder and run:
 

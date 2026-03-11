@@ -54,7 +54,7 @@ npm link
 2. Run in your Verona-Modul:
 
 ```bash
-npm link @verona/player
+npm link @verona/schemer
 ```
 Now you can find your verona-lib in node_modules named: @verona
 
@@ -63,7 +63,7 @@ Now you can find your verona-lib in node_modules named: @verona
 #### API Doku erzeugen: 
 
 ```bash
-cd packages/player
+cd packages/schemer
 pnpm docs
 ```
 
