@@ -8,12 +8,6 @@ import { AllowedPropertiesValues } from './values';
 export namespace SubSchema {
 
   /**  @public*/
-  export interface sharedParameters {
-    key: string; // >= 2 characters
-    value?: string;
-  }
-
-   /**  @public*/
   export interface values {
     value: string | number | boolean;
     label?: string;
@@ -41,7 +35,7 @@ export namespace MainSchema {
   export interface EditorConfig {
     directDownloadUrl?: string; // ISO 8601 date-time
     role?: AllowedPropertiesValues.Role;
-    sharedParameters?: SubSchema.sharedParameters[];
+    sharedParameters?: MainSchema.SharedParameter[];
   }
    
   /** @public*/
