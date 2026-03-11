@@ -4,12 +4,6 @@ TypeScript library for implementing the [Verona Widget Interface (Spec 1.0.0)](h
 
 A widget is an interactive element requested by a player — for example a calculator or a periodic table — that runs inside an `<iframe>` and communicates with the host application via `postMessage`.
 
-## Installation
-
-```bash
-pnpm add @verona/widget
-```
-
 ## Workflow
 
 ```

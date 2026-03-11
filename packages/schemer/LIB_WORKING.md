@@ -4,12 +4,6 @@ TypeScript library for implementing the [Verona Schemer Interface (Spec 3.2.0)](
 
 A schemer is an interactive tool for developing a coding scheme — a set of rules describing how variable values from assessment responses are to be coded, either automatically or manually. It runs inside an `<iframe>` and communicates with the host application via `postMessage`.
 
-## Installation
-
-```bash
-pnpm add @verona/schemer
-```
-
 ## Workflow
 
 ```
