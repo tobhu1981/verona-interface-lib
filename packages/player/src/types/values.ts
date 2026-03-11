@@ -29,4 +29,7 @@ export namespace AllowedPropertiesValues {
 
    /** Code values runtime error */
   export type Code = 'AUDIO_CORRUPT' | 'GEOGEBRA_CRASH';
+
+   /** Navigation targets relative to current unit position */
+  export type NavigationTarget = 'next' | 'previous' | 'first' | 'last' | 'end';
 }

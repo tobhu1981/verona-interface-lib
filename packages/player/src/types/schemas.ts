@@ -20,8 +20,8 @@ export namespace MainSchema {
    /** Session ID string type. Unique identifier for the current player session. @public*/
   export type SessionIdString = string;
 
-   /** Navigation targets relative to current unit position */
-  export type NavigationTarget = 'next' | 'previous' | 'first' | 'last' | 'end';
+  /** Navigation targets relative to current unit position */
+  export type NavigationTarget = AllowedPropertiesValues.NavigationTarget;
 
  /** Shared parameter for cross-instance communication (used in PlayerConfig and PlayerState) @public */
   export interface SharedParameter {
