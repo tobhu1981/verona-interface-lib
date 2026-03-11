@@ -63,14 +63,16 @@ export interface DefinitionChangedNotificationData
  *
  * // 2. Register handler BEFORE sendReady()
  * editor.onStartCommand((cmd) => {
- *   loadUnit(cmd.unitDefinition);
+ *   if (cmd.unitDefinition) loadDefinition(cmd.unitDefinition, cmd.unitDefinitionType);
+ *   if (cmd.editorConfig?.role) applyRole(cmd.editorConfig.role);
+ *   if (cmd.editorConfig?.directDownloadUrl) configureDownloadUrl(cmd.editorConfig.directDownloadUrl);
  * });
  *
  * // 3. Announce readiness
  * editor.sendReady({ metadata: JSON.stringify(meta) });
  *
- * // 4. Send changes whenever the unit definition changes
- * editor.sendDefinitionChanged(unitDefString, 'my-editor@1.0', variables);
+ * // 4. Send definition changes whenever the user edits the unit
+ * editor.sendDefinitionChanged(definition, definitionType, variables, dependenciesToPlay, dependenciesToEdit);
  *
  * // 5. Cleanup (e.g. in ngOnDestroy)
  * editor.destroy();
@@ -104,9 +106,10 @@ export class VeronaEditorApiService {
 
   /**
    * Send `voeReadyNotification` to the host.
-   * Call this **after** registering all handlers (especially `onStartCommand`).
+   * Call this **after** registering `onStartCommand`, as the host will respond
+   * with a `voeStartCommand` immediately upon receiving this notification.
    *
-   * @param data - Notification payload (metadata string required by spec)
+   * @param data - Notification payload (stringified metadata JSON-LD required by spec)
    * @public
    */
   sendReady(data: ReadyNotificationData): void {
@@ -114,41 +117,50 @@ export class VeronaEditorApiService {
   }
 
   /**
-   * Send `voeDefinitionChangedNotification` to the host whenever the unit
-   * definition has changed (e.g. after every editor action that modifies it).
+   * Send `voeDefinitionChangedNotification` to the host whenever the user edits the unit.
+   *
+   * The full, updated definition is always sent — not a diff. The host stores it
+   * for later use by a player. The `variables` list must always be current and is
+   * sent alongside the definition so the schemer can prepare the coding scheme.
+   *
+   * `dependenciesToPlay` and `dependenciesToEdit` should list all external files or
+   * services required at runtime. The host can warn if a dependency is unavailable.
    *
    * Requires an active session (i.e. `onStartCommand` must have fired first).
    *
-   * @param unitDefinition    - Serialised unit definition (plain JSON string or base64)
-   * @param unitDefinitionType - Optional MIME/type identifier
-   * @param variables          - Optional variable metadata
-   * @param dependencies       - Optional file/service dependencies
-   * @param dependenciesToPlay - Optional subset of dependencies needed by the player
+   * @param unitDefinition      - The complete, updated unit definition serialised as a string
+   * @param unitDefinitionType  - Optional format/version identifier for the definition
+   * @param variables           - Current list of all variables in the unit
+   * @param dependenciesToPlay  - Optional dependencies needed during playback (e.g. GeoGebra)
+   * @param dependenciesToEdit  - Optional dependencies needed during editing (e.g. GeoGebra)
+   * @param sharedParameters    - Optional shared parameters for cross-module data exchange
    * @public
    */
   sendDefinitionChanged(
-  unitDefinition: string,
-  unitDefinitionType?: string,
-  variables?: MainSchema.VariableInfo[],
-  dependenciesToPlay?: MainSchema.Dependency[],
-  dependenciesToEdit?: MainSchema.Dependency[]
+    unitDefinition?: string,
+    unitDefinitionType?: string,
+    variables?: MainSchema.VariableInfo[],
+    dependenciesToPlay?: MainSchema.Dependency[],
+    dependenciesToEdit?: MainSchema.Dependency[],
+    sharedParameters?: MainSchema.SharedParameter[]
   ): void {
     if (!this.sessionId) {
-      this.warn('Cannot send voeDefinitionChangedNotification: no active session (sessionId missing). Did the host send voeStartCommand?');
+      console.warn('[VeronaEditor] Cannot send voeDefinitionChangedNotification: no active session. Did the host send voeStartCommand?');
       return;
     }
 
     const data: DefinitionChangedNotificationData = {
-    sessionId: this.sessionId,
-    timeStamp: new Date().toISOString(),
-    unitDefinition,
-    unitDefinitionType,
-    variables,
-    dependenciesToPlay,
-    dependenciesToEdit
-  };
+      sessionId: this.sessionId,
+      timeStamp: new Date().toISOString(),
+      unitDefinition,
+      unitDefinitionType,
+      variables,
+      dependenciesToPlay,
+      dependenciesToEdit,
+      sharedParameters
+    };
 
-    this.postMessage(VeronaOperations.STATE_CHANGED_NOTIFICATION, data);
+    this.postMessage(VeronaOperations.DEFINITION_CHANGED_NOTIFICATION, data);
   }
 
   // ============================================================================
@@ -158,21 +170,44 @@ export class VeronaEditorApiService {
   /**
    * Register a handler for `voeStartCommand`.
    *
+   * The StartCommand is **mandatory** for the Editor – it carries the unit
+   * definition and configuration the editor needs to initialise its UI.
+   * Per spec, messages without a `sessionId` are silently discarded.
    * The session ID is stored automatically before your callback is called.
+   *
    * Register this handler **before** calling `sendReady()`.
+   *
+   * Typical usage in the callback:
+   * - Load `unitDefinition` into the editor UI (if provided)
+   * - Apply `editorConfig.role` to restrict/expand available features
+   * - Set `editorConfig.directDownloadUrl` for lazy-loaded resources (e.g. GeoGebra)
+   * - Apply `editorConfig.sharedParameters` for cross-module coordination
    *
    * @param callback - Called with the full start-command payload
    * @public
    */
   onStartCommand(callback: (data: StartCommandData) => void): void {
     this.on(VeronaOperations.START_COMMAND, (data: StartCommandData) => {
-      if (data.sessionId) {
-        this.sessionId = data.sessionId;
-        callback(data);
-      } else {
-        this.warn('Received voeStartCommand without sessionId – ignoring.');
+      // Per spec: "If a message has no or empty session id, it's not processed."
+      if (!data.sessionId) {
+        console.warn('[VeronaEditor] Received voeStartCommand without sessionId – ignoring.');
+        return;
       }
+      this.sessionId = data.sessionId;
+      callback(data);
     });
+  }
+
+  // ============================================================================
+  // GETTERS
+  // ============================================================================
+
+  /**
+   * Returns the current session ID, or `null` if no start command has been received yet.
+   * @public
+   */
+  get currentSessionId(): string | null {
+    return this.sessionId;
   }
 
   // ============================================================================
@@ -212,30 +247,26 @@ export class VeronaEditorApiService {
   }
 
   /**
-   * Central message handler – validates origin, structure and session ID,
+   * Central message handler – validates origin and structure,
    * then dispatches to registered callbacks.
    * @internal
    */
   private handleMessage(event: MessageEvent): void {
     if (this.allowedOrigin !== '*' && event.origin !== this.allowedOrigin) {
-      this.warn(`Message from disallowed origin "${event.origin}" – ignored.`);
+      if (this.debug) {
+        console.warn(`[VeronaEditor] Message from disallowed origin "${event.origin}" – ignored.`);
+      }
       return;
     }
 
     if (!isVeronaMessage(event.data)) {
-      return; // silently ignore non-Verona messages (e.g. devtools, HMR, …)
+      return;
     }
 
     const data = event.data;
 
     if (this.debug) {
       console.log('[VeronaEditor] Received:', data);
-    }
-
-    // Once a session is established, reject messages with a wrong sessionId
-    if (this.sessionId && data.sessionId && data.sessionId !== this.sessionId) {
-      this.warn(`SessionId mismatch: expected "${this.sessionId}", got "${data.sessionId}" – ignored.`);
-      return;
     }
 
     const handlers = this.messageHandlers.get(data.type);
@@ -253,15 +284,5 @@ export class VeronaEditorApiService {
       this.messageHandlers.set(type, new Set());
     }
     this.messageHandlers.get(type)!.add(callback);
-  }
-
-  /**
-   * Emit a console warning when debug mode is active.
-   * @internal
-   */
-  private warn(message: string): void {
-    if (this.debug) {
-      console.warn('[VeronaEditor]', message);
-    }
   }
 }
