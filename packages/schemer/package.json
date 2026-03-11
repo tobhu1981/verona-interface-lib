@@ -1,0 +1,40 @@
+{
+  "name": "@verona/schemer",
+  "version": "1.0.0-beta",
+  "veronaSpec": "6.1.1",
+  "description": "Verona Schemer Interface",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "typecheck": "tsc --noEmit",
+    "doc": "typedoc --logLevel Error",
+    "doc:serve": "npm run doc && npx serve doc"
+  },
+  "keywords": [
+    "verona",
+    "verona-spec-6.1.1",
+    "player",
+    "interface"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@verona/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "typedoc": "^0.26.0"
+  }
+}

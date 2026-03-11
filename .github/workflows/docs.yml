@@ -130,7 +130,13 @@ jobs:
               <a href="./editor/index.html">View Documentation →</a>
             </div>
 
-             <div class="package">
+            <div class="package">
+              <h2>@verona/schemer <span class="badge">Spec $SCHEMER_VERSION</span></h2>
+              <p>Verona Schemer Interface - Communication between schemer and host.</p>
+              <a href="./schemer/index.html">View Documentation →</a>
+            </div>
+
+            <div class="package">
               <h2>@verona/widget <span class="badge">Spec $WIDGET_VERSION</span></h2>
               <p>Verona Widget Interface - Communication between widget and host.</p>
               <a href="./widget/index.html">View Documentation →</a>
