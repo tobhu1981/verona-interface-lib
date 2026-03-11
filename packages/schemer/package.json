@@ -1,7 +1,7 @@
 {
   "name": "@verona/schemer",
   "version": "1.0.0-beta",
-  "veronaSpec": "6.1.1",
+  "veronaSpec": "3.2.0",
   "description": "Verona Schemer Interface",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
