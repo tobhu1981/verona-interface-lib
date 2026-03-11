@@ -1,18 +1,21 @@
 // ============================================================================
-// VERONA SCHEMER API-SERVICE CLASS
+// VERONA SCHEMER API SERVICE
 // ============================================================================
 
+import { isVeronaMessage, VeronaMessage } from '@verona/shared';
+import { DEFAULT_TARGET_ORIGIN } from '../constants';
 import {
   VeronaOperations,
-  VeronaMessage,
   PayloadInterfacesProperties,
   MainSchema
 } from '../types';
-import { DEFAULT_TARGET_ORIGIN } from '../constants';
-import { isVeronaMessage } from '@verona/shared';
+
+// ============================================================================
+// OPTIONS & DATA INTERFACES
+// ============================================================================
 
 /**
- * Player configuration options
+ * Schemer configuration options
  * @public
  */
 export interface VeronaSchemerOptions {
@@ -23,288 +26,238 @@ export interface VeronaSchemerOptions {
 }
 
 /**
- * Typed message data for start command
+ * Data for the ready notification sent to host
  * @public
  */
-export interface StartCommandData extends PayloadInterfacesProperties.PlayerReceive.StartCommand {
+export interface ReadyNotificationData
+  extends PayloadInterfacesProperties.SchemerSend.ReadyNotification {}
+
+/**
+ * Data received from host via start command
+ * @public
+ */
+export interface StartCommandData
+  extends PayloadInterfacesProperties.SchemerReceive.StartCommand {
   type: typeof VeronaOperations.START_COMMAND;
 }
 
 /**
- * Typed message data for page navigation command
+ * Data for the scheme-changed notification sent to host
  * @public
  */
-export interface PageNavigationCommandData extends PayloadInterfacesProperties.PlayerReceive.PageNavigationCommand {
-  type: typeof VeronaOperations.PAGE_NAVIGATION_COMMAND;
-}
+export interface SchemeChangedNotificationData
+  extends PayloadInterfacesProperties.SchemerSend.SchemeChangedNotification {}
+
+// ============================================================================
+// SERVICE CLASS
+// ============================================================================
 
 /**
- * Typed message data for navigation denied notification
+ * Verona Schemer Interface
+ * Handles communication between schemer and host application.
+ *
+ * ### Lifecycle
+ * ```typescript
+ * // 1. Instantiate
+ * const schemer = new VeronaSchemeApiService({ debug: true });
+ *
+ * // 2. Register handler BEFORE sendReady()
+ * schemer.onStartCommand((cmd) => {
+ *   initUiFromVariables(cmd.variables);
+ *   if (cmd.codingScheme) loadScheme(cmd.codingScheme, cmd.codingSchemeType);
+ *   if (cmd.schemerConfig?.directDownloadUrl) configureDownloadUrl(cmd.schemerConfig.directDownloadUrl);
+ * });
+ *
+ * // 3. Announce readiness
+ * schemer.sendReady({ metadata: JSON.stringify(meta) });
+ *
+ * // 4. Send scheme changes whenever the user edits the coding scheme
+ * schemer.sendSchemeChanged(scheme, schemeType, dependencies, sharedParameters);
+ *
+ * // 5. Cleanup (e.g. in ngOnDestroy)
+ * schemer.destroy();
+ * ```
+ *
  * @public
  */
-export interface NavigationDeniedNotificationData extends PayloadInterfacesProperties.PlayerReceive.NavigationDeniedNotification {
-  type: typeof VeronaOperations.NAVIGATION_DENIED_NOTIFICATION;
-}
-
-/**
- * Typed message data for player config changed notification
- * @public
- */
-export interface PlayerConfigChangedNotificationData extends PayloadInterfacesProperties.PlayerReceive.PlayerConfigChangedNotification {
-  type: typeof VeronaOperations.PLAYER_CONFIG_CHANGED_NOTIFICATION;
-}
-
-/**
- * Typed message data for widget return
- * @public
- */
-export interface WidgetReturnData extends PayloadInterfacesProperties.PlayerReceive.WidgetReturn {
-  type: typeof VeronaOperations.WIDGET_RETURN;
-}
-
-/**
- * Verona Player Interface
- * Handles communication between player and host application
- * 
- * @public
- */
-export class VeronaPlayerApiService {
-  private messageHandlers: Map<string, Set<Function>> = new Map();
+export class VeronaSchemerApiService {
+  private readonly messageHandlers: Map<string, Set<Function>> = new Map();
   private sessionId: string | null = null;
-  private debug: boolean;
-  private allowedOrigin: string;
-  private targetWindow: Window;
-  private messageListener: (event: MessageEvent) => void;
+  private readonly debug: boolean;
+  private readonly allowedOrigin: string;
+  private readonly targetWindow: Window;
+  private readonly messageListener: (event: MessageEvent) => void;
 
   constructor(options: VeronaSchemerOptions = {}) {
     this.debug = options.debug ?? false;
     this.allowedOrigin = options.allowedOrigin ?? DEFAULT_TARGET_ORIGIN;
     this.targetWindow = window.parent;
 
-    // Store reference to listener for cleanup
     this.messageListener = (event: MessageEvent) => {
       this.handleMessage(event);
     };
 
-    // Register global message listener
     window.addEventListener('message', this.messageListener);
-  
   }
 
   // ============================================================================
-  // PUBLIC API - SENDING MESSAGES
+  // PUBLIC API – SENDING
   // ============================================================================
 
   /**
-   * Send ready notification to host
+   * Send `vosReadyNotification` to the host.
+   * Call this **after** registering `onStartCommand`, as the host will respond
+   * with a `vosStartCommand` immediately upon receiving this notification.
+   *
+   * @param data - Notification payload (stringified metadata JSON-LD required by spec)
    * @public
    */
-  sendReady(data: PayloadInterfacesProperties.PlayerSend.ReadyNotification): void {
+  sendReady(data: ReadyNotificationData): void {
     this.postMessage(VeronaOperations.READY_NOTIFICATION, data);
   }
 
   /**
-   * Send state changed notification to host
+   * Send `vosSchemeChangedNotification` to the host whenever the user edits the coding scheme.
+   *
+   * The full, updated scheme is always sent — not a diff. The host stores it
+   * for later use by a coder. `dependenciesToCode` must list all external files
+   * or services required at coding time so the host can ensure they remain accessible.
+   *
+   * Requires an active session (i.e. `onStartCommand` must have fired first,
+   * as `sessionId` is mandatory in this notification).
+   *
+   * @param codingScheme        - The complete, updated coding scheme serialised as a string
+   * @param codingSchemeType    - Optional format/version identifier for the coding scheme
+   * @param dependenciesToCode  - Optional external files or services needed during coding
+   * @param sharedParameters    - Optional shared parameters for cross-module data exchange
    * @public
    */
-  sendStateChanged(
-    unitState?: MainSchema.UnitState,
-    playerState?: MainSchema.PlayerState,
-    log?: MainSchema.LogEntry[]
+  sendSchemeChanged(
+    codingScheme?: string,
+    codingSchemeType?: string,
+    dependenciesToCode?: MainSchema.Dependency[],
+    sharedParameters?: MainSchema.SharedParameter[]
   ): void {
     if (!this.sessionId) {
-      this.warn('Cannot send state changed without sessionId');
+      this.warn('Cannot send vosSchemeChangedNotification: no active session. Did the host send vosStartCommand?');
       return;
     }
 
-    const data: PayloadInterfacesProperties.PlayerSend.StateChangedNotification = {
+    const data: SchemeChangedNotificationData = {
       sessionId: this.sessionId,
       timeStamp: new Date().toISOString(),
-      unitState,
-      playerState,
-      log
+      codingScheme,
+      codingSchemeType,
+      dependenciesToCode,
+      sharedParameters
     };
 
-    this.postMessage(VeronaOperations.STATE_CHANGED_NOTIFICATION, data);
-  }
-
-  /**
-   * Send unit navigation request to host
-   * @public
-   */
-  sendUnitNavigationRequest(target: MainSchema.NavigationTarget): void {
-    if (!this.sessionId) {
-      this.warn('Cannot send navigation request without sessionId');
-      return;
-    }
-
-    const data: PayloadInterfacesProperties.PlayerSend.UnitNavigationRequestedNotification = {
-      sessionId: this.sessionId,
-      target
-    };
-
-    this.postMessage(VeronaOperations.UNIT_NAVIGATION_REQUESTED_NOTIFICATION, data);
-  }
-
-  /**
-   * Send runtime error notification to host
-   * @public
-   */
-  sendRuntimeError(code: string, message?: string): void {
-    if (!this.sessionId) {
-      this.warn('Cannot send runtime error without sessionId');
-      return;
-    }
-
-    const data: PayloadInterfacesProperties.PlayerSend.RuntimeErrorNotification = {
-      sessionId: this.sessionId,
-      code: code as any,
-      message
-    };
-
-    this.postMessage(VeronaOperations.RUNTIME_ERROR_NOTIFICATION, data);
-  }
-
-  /**
-   * Send widget call to host
-   * @public
-   */
-  sendWidgetCall(
-    widgetType: string,
-    parameters?: MainSchema.WidgetParameter[],
-    state?: Record<string, string>,
-    callId?: string
-  ): void {
-    if (!this.sessionId) {
-      this.warn('Cannot send widget call without sessionId');
-      return;
-    }
-
-    const data: PayloadInterfacesProperties.PlayerSend.WidgetCall = {
-      sessionId: this.sessionId,
-      callId,
-      widgetType: widgetType as any,
-      parameters,
-      state
-    };
-
-    this.postMessage(VeronaOperations.WIDGET_CALL, data);
-  }
-
-  /**
-   * Send window focus changed notification
-   * @public
-   */
-  sendWindowFocusChanged(hasFocus: boolean): void {
-    const data: PayloadInterfacesProperties.PlayerSend.WindowFocusChangedNotification = {
-      timeStamp: new Date().toISOString(),
-      hasFocus
-    };
-
-    this.postMessage(VeronaOperations.WINDOW_FOCUS_CHANGED_NOTIFICATION, data);
+    this.postMessage(VeronaOperations.SCHEME_CHANGED_NOTIFICATION, data);
   }
 
   // ============================================================================
-  // PUBLIC API - REGISTERING HANDLERS
+  // PUBLIC API – RECEIVING
   // ============================================================================
 
   /**
-   * Register handler for start command
+   * Register a handler for `vosStartCommand`.
+   *
+   * Unlike the Widget, the StartCommand is **mandatory** for the Schemer –
+   * the `variables` list is the foundation the schemer's UI is built upon.
+   * The session ID is stored automatically before your callback is called.
+   *
+   * Register this handler **before** calling `sendReady()`.
+   *
+   * Typical usage in the callback:
+   * - Initialise the UI from `variables`
+   * - Load an existing `codingScheme` if provided
+   * - Configure runtime behaviour from `schemerConfig`
+   *   (e.g. set `directDownloadUrl` for lazy-loaded resources)
+   *
+   * @param callback - Called with the full start-command payload
    * @public
    */
   onStartCommand(callback: (data: StartCommandData) => void): void {
     this.on(VeronaOperations.START_COMMAND, (data: StartCommandData) => {
-    if (data.sessionId) {
+      // Per spec: "If a message has no or empty session id, it's not processed."
+      if (!data.sessionId) {
+        this.warn('Received vosStartCommand without sessionId – ignoring.');
+        return;
+      }
       this.sessionId = data.sessionId;
       callback(data);
-    } else {
-      console.warn("Verona: START_COMMAND ohne sessionId erhalten!");
-    }
     });
   }
 
-  /**
-   * Register handler for page navigation command
-   * @public
-   */
-  onPageNavigationCommand(callback: (data: PageNavigationCommandData) => void): void {
-    this.on(VeronaOperations.PAGE_NAVIGATION_COMMAND, callback);
-  }
-
-  /**
-   * Register handler for navigation denied notification
-   * @public
-   */
-  onNavigationDenied(callback: (data: NavigationDeniedNotificationData) => void): void {
-    this.on(VeronaOperations.NAVIGATION_DENIED_NOTIFICATION, callback);
-  }
-
-  /**
-   * Register handler for player config changed notification
-   * @public
-   */
-  onPlayerConfigChanged(callback: (data: PlayerConfigChangedNotificationData) => void): void {
-    this.on(VeronaOperations.PLAYER_CONFIG_CHANGED_NOTIFICATION, callback);
-  }
-
-  /**
-   * Register handler for widget return
-   * @public
-   */
-  onWidgetReturn(callback: (data: WidgetReturnData) => void): void {
-    this.on(VeronaOperations.WIDGET_RETURN, callback);
-  }
-
   // ============================================================================
-  // INTERNAL METHODS
+  // GETTERS
   // ============================================================================
 
   /**
-   * Send a postMessage to the host window
+   * Returns the current session ID, or `null` if no start command has been received yet.
+   * @public
+   */
+  get currentSessionId(): string | null {
+    return this.sessionId;
+  }
+
+  // ============================================================================
+  // CLEANUP
+  // ============================================================================
+
+  /**
+   * Remove the global `message` event listener and clear all handlers.
+   * Call this when the schemer component is destroyed (e.g. `ngOnDestroy`).
+   * @public
+   */
+  public destroy(): void {
+    window.removeEventListener('message', this.messageListener);
+    this.messageHandlers.clear();
+    this.sessionId = null;
+
+    if (this.debug) {
+      console.log('[VeronaSchemer] Destroyed');
+    }
+  }
+
+  // ============================================================================
+  // INTERNAL HELPERS
+  // ============================================================================
+
+  /**
+   * Dispatch a postMessage to the host window.
    * @internal
    */
-  private postMessage(type: string, data: any): void {
-    const message: VeronaMessage = {
-      type: type as any,
-      ...data
-    };
-
+  private postMessage(type: string, data: object): void {
+    const message: VeronaMessage = { type: type as any, ...data };
     this.targetWindow.postMessage(message, this.allowedOrigin);
 
     if (this.debug) {
-      console.log('[VeronaPlayer] Sent:', message);
+      console.log('[VeronaSchemer] Sent:', message);
     }
   }
 
   /**
-   * Handle incoming postMessage
+   * Central message handler – validates origin and structure,
+   * then dispatches to registered callbacks.
    * @internal
    */
   private handleMessage(event: MessageEvent): void {
-    // Validate origin if specified
     if (this.allowedOrigin !== '*' && event.origin !== this.allowedOrigin) {
-      this.warn(`Message from invalid origin: ${event.origin}`);
+      this.warn(`Message from disallowed origin "${event.origin}" – ignored.`);
       return;
     }
 
-    // Validate message structure
     if (!isVeronaMessage(event.data)) {
-      return; // Silently ignore non-Verona messages
+      return;
     }
 
     const data = event.data;
 
     if (this.debug) {
-      console.log('[VeronaPlayer] Received:', data);
+      console.log('[VeronaSchemer] Received:', data);
     }
 
-    // Validate sessionId for commands that require it
-    if (this.sessionId && data.sessionId && data.sessionId !== this.sessionId) {
-      this.warn(`SessionId mismatch: expected ${this.sessionId}, got ${data.sessionId}`);
-      return;
-    }
-
-    // Trigger registered handlers
     const handlers = this.messageHandlers.get(data.type);
     if (handlers) {
       handlers.forEach(handler => handler(data));
@@ -312,7 +265,7 @@ export class VeronaPlayerApiService {
   }
 
   /**
-   * Register a message handler
+   * Register an internal message handler (supports multiple callbacks per type).
    * @internal
    */
   private on(type: string, callback: Function): void {
@@ -323,34 +276,11 @@ export class VeronaPlayerApiService {
   }
 
   /**
-   * Log a warning message if debug is enabled
+   * Emit a console warning (always, not only in debug mode) for spec violations,
+   * and additionally log to console in debug mode.
    * @internal
    */
   private warn(message: string): void {
-    if (this.debug) {
-      console.warn('[VeronaPlayer]', message);
-    }
-  }
-
-  /**
-   * Optional: Clean up resources and remove event listeners.
-   * Call this when the player is no longer needed (e.g., in ngOnDestroy).
-   * 
-   * @public
-   * 
-   */
-  public destroy(): void {
-    // Remove message listener
-    window.removeEventListener('message', this.messageListener);
-    
-    // Clear all registered handlers
-    this.messageHandlers.clear();
-    
-    // Clear session
-    this.sessionId = null;
-    
-    if (this.debug) {
-      console.log('[VeronaPlayer] Destroyed');
-    }
+    console.warn('[VeronaSchemer]', message);
   }
 }

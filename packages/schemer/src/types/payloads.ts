@@ -3,98 +3,93 @@
 // ============================================================================
 
 import { MainSchema } from './schemas';
-import { AllowedPropertiesValues } from './values';
 
 /**
  * Namespace containing all message payload interfaces.
- * These define the structure of data sent in Verona messages.
+ * These define the structure of data sent in Verona Schemer messages.
  * @public
  */
 export namespace PayloadInterfacesProperties {
 
-  /** Namespace containing all player receives payloads @public*/
-  export namespace PlayerReceive {
+  /** Namespace containing all schemer receive payloads @public */
+  export namespace SchemerReceive {
 
-    /** vopStartCommand - Host->Player: Host starts the player @public*/
+    /**
+     * vosStartCommand - Host->Schemer: Host sends variables and optional coding scheme.
+     *
+     * The `variables` list is the foundation of all coding – the schemer cannot
+     * function without it. `sessionId` is required and must be echoed back in
+     * every subsequent `vosSchemeChangedNotification`.
+     * @public
+     */
     export interface StartCommand {
+      /** Required. Used to associate all subsequent messages with this unit. */
       sessionId: MainSchema.SessionIdString;
-      unitDefinition?: string; // base64 encoded
-      unitDefinitionType?: string;
-      unitState?: MainSchema.UnitState;
-      playerConfig?: MainSchema.PlayerConfig;
+      /**
+       * The coding scheme to be edited (if any).
+       * Passed as a serialised string (format: byte).
+       */
+      codingScheme?: string;
+      /**
+       * Identifies the format/version of the coding scheme.
+       * Helps the schemer avoid UI issues when loading older schemes.
+       */
+      codingSchemeType?: string;
+      /**
+       * Variables from the unit definition.
+       * These represent control states during assessment and are the basis for coding.
+       */
+      variables?: MainSchema.VariableInfo[];
+      /** Schemer-specific configuration */
+      schemerConfig?: MainSchema.SchemerConfig;
     }
 
-  /** vopPageNavigationCommand - Host->Player: Host requests page navigation @public*/
-    export interface PageNavigationCommand {
-      sessionId: MainSchema.SessionIdString;
-      target: string; // page id
-    }
-  
-    /** vopNavigationDeniedNotification - Host->Player: Host denies navigation @public*/
-    export interface NavigationDeniedNotification {
-      sessionId: MainSchema.SessionIdString;
-      reason?: AllowedPropertiesValues.NavigationDenialReason[];
-    }
-  
-  /** vopPlayerConfigChangedNotification - Host->Player: Host updates player config @public*/
-    export interface PlayerConfigChangedNotification {
-      sessionId: MainSchema.SessionIdString;
-      playerConfig: MainSchema.PlayerConfig;
-    }
-  
-  /** vopWidgetReturn - Host->Player: Sends the return value of a widget call to the player. @public*/
-    export interface WidgetReturn {
-      sessionId: MainSchema.SessionIdString;
-      callId?: string;
-      state?: Record<string, string>; // key -> base64 encoded JSON;
-    }
-  
   }
-  
-  /** Namespace containing all player send payloads @public*/
-  export namespace PlayerSend {
- 
-     /** vopReadyNotification - Player->Host: Player announces readiness @public*/
+
+  /** Namespace containing all schemer send payloads @public */
+  export namespace SchemerSend {
+
+    /**
+     * vosReadyNotification - Schemer->Host: Schemer announces readiness.
+     * Sent as the last step of the schemer's own initialisation.
+     * @public
+     */
     export interface ReadyNotification {
-      metadata: string; // Stringified JSON-LD metadata
+      /** Stringified JSON-LD metadata object from the schemer's html header. */
+      metadata: string;
     }
-    
-    /** vopStateChangedNotification - Player->Host: Player reports state changes @public*/
-    export interface StateChangedNotification {
+
+    /**
+     * vosSchemeChangedNotification - Schemer->Host: Coding scheme has changed.
+     *
+     * Sent whenever the user makes a change to the coding scheme.
+     * The host uses `timeStamp` to ensure correct ordering of asynchronous messages.
+     * @public
+     */
+    export interface SchemeChangedNotification {
+      /** Session ID from the start command. Required for correct unit association. */
       sessionId: MainSchema.SessionIdString;
+      /** ISO 8601 date-time string. Used to order asynchronously arriving messages. */
       timeStamp: string;
-      unitState?: MainSchema.UnitState;
-      playerState?: MainSchema.PlayerState;
-      log?: MainSchema.LogEntry[];
-      }
-
-    /** vopUnitNavigationRequestedNotification - Player->Host: Player requests unit navigation @public*/
-    export interface UnitNavigationRequestedNotification {
-      sessionId: MainSchema.SessionIdString;
-      target: MainSchema.NavigationTarget;
+      /**
+       * The complete, updated coding scheme serialised as a string.
+       * The host stores this for later use by a coder.
+       */
+      codingScheme?: string;
+      /**
+       * Identifies the format/version of the coding scheme.
+       * Helps the host (and future coders) interpret the scheme correctly.
+       */
+      codingSchemeType?: string;
+      /**
+       * External files or services that must be available when coding responses.
+       * The host must ensure these dependencies are accessible during coding.
+       */
+      dependenciesToCode?: MainSchema.Dependency[];
+      /** Shared parameters for cross-module data exchange. */
+      sharedParameters?: MainSchema.SharedParameter[];
     }
 
-    /** vopRuntimeErrorNotification - Player->Host: Player reports runtime error @public*/
-    export interface RuntimeErrorNotification {
-      sessionId: MainSchema.SessionIdString;
-      code: AllowedPropertiesValues.Code;
-      message?: string;
-    }
-
-    /** vopWidgetCall - Player->Host: The player calls for the execution of a widget.@public*/
-    export interface WidgetCall {
-      sessionId: MainSchema.SessionIdString;
-      callId?: string;
-      widgetType?: AllowedPropertiesValues.WidgetType;
-      parameters?:MainSchema.WidgetParameter[];
-      state?: Record<string, string>; // key -> base64 encoded JSON;
-    }
-
-    /** vopWindowFocusChangedNotification - Player->Host: Player reports focus changes @public*/
-    export interface WindowFocusChangedNotification {
-      timeStamp: string; // ISO 8601
-      hasFocus: boolean;
-    }
   }
 
 }

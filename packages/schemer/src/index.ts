@@ -4,7 +4,7 @@
 // ============================================================================
 
 // Constants (not exported by default, use specific imports if needed)
-export { DEFAULT_TARGET_ORIGIN, MIN_SHARED_PARAMETER_KEY_LENGTH, PACKAGE_VERSION, VERONA_SPEC_VERSION} from './constants';
+export { DEFAULT_TARGET_ORIGIN, PACKAGE_VERSION, VERONA_SPEC_VERSION} from './constants';
 
 // Re-export shared utilities
 export { encodeBase64, decodeBase64, isVeronaMessage } from '@verona/shared';
@@ -13,54 +13,36 @@ export { encodeBase64, decodeBase64, isVeronaMessage } from '@verona/shared';
 export * from './types';
 
 // Services
-export { VeronaPlayerApiService } from './services/VeronaSchemerApiService';
+export { VeronaSchemerApiService } from './services/VeronaSchemerApiService';
 
 export type {
   VeronaSchemerOptions,
+  ReadyNotificationData,
   StartCommandData,
-  PageNavigationCommandData,
-  NavigationDeniedNotificationData,
-  PlayerConfigChangedNotificationData,
-  WidgetReturnData
+  SchemeChangedNotificationData  
 } from './services/VeronaSchemerApiService';
 
 // ============================================================================
-// CONVENIENCE TYPE EXPORTS - Direct access to commonly used types
+// CONVENIENCE TYPE EXPORTS
 // ============================================================================
 
 // Direct exports from MainSchema
-export type UnitState = MainSchema.UnitState;
-export type PlayerConfig = MainSchema.PlayerConfig;
-export type PlayerState = MainSchema.PlayerState;
-export type LogEntry = MainSchema.LogEntry;
-export type NavigationTarget = MainSchema.NavigationTarget;
 export type SessionIdString = MainSchema.SessionIdString;
 export type SharedParameter = MainSchema.SharedParameter;
-export type WidgetParameter = MainSchema.WidgetParameter;
+export type Dependency = MainSchema.Dependency;
+export type SchemerConfig = MainSchema.SchemerConfig;
+export type VariableInfo = MainSchema.VariableInfo;
+export type VariableType = AllowedPropertiesValues.VariableType;
+export type VariableFormat = AllowedPropertiesValues.VariableFormat;
+export type VariableValue = SubSchema.VariableValue;
 
-// Direct exports from PayloadInterfacesProperties.PlayerReceive
-export type StartCommand = PayloadInterfacesProperties.PlayerReceive.StartCommand;
-export type PageNavigationCommand = PayloadInterfacesProperties.PlayerReceive.PageNavigationCommand;
-export type NavigationDeniedNotification = PayloadInterfacesProperties.PlayerReceive.NavigationDeniedNotification;
-export type PlayerConfigChangedNotification = PayloadInterfacesProperties.PlayerReceive.PlayerConfigChangedNotification;
-export type WidgetReturn = PayloadInterfacesProperties.PlayerReceive.WidgetReturn;
+// Direct exports from PayloadInterfacesProperties.SchemerReceive
+export type StartCommand = PayloadInterfacesProperties.SchemerReceive.StartCommand;
 
-// Direct exports from PayloadInterfacesProperties.PlayerSend
-export type ReadyNotification = PayloadInterfacesProperties.PlayerSend.ReadyNotification;
-export type StateChangedNotification = PayloadInterfacesProperties.PlayerSend.StateChangedNotification;
-export type UnitNavigationRequestedNotification = PayloadInterfacesProperties.PlayerSend.UnitNavigationRequestedNotification;
-export type RuntimeErrorNotification = PayloadInterfacesProperties.PlayerSend.RuntimeErrorNotification;
-export type WidgetCall = PayloadInterfacesProperties.PlayerSend.WidgetCall;
-export type WindowFocusChangedNotification = PayloadInterfacesProperties.PlayerSend.WindowFocusChangedNotification;
+// Direct exports from PayloadInterfacesProperties.SchemerSend
+export type ReadyNotification = PayloadInterfacesProperties.SchemerSend.ReadyNotification;
+export type SchemeChangedNotification = PayloadInterfacesProperties.SchemerSend.SchemeChangedNotification;
 
-// Direct exports from AllowedPropertiesValues
-export type Progress = AllowedPropertiesValues.Progress;
-export type LogPolicy = AllowedPropertiesValues.LogPolicy;
-export type PagingMode = AllowedPropertiesValues.PagingMode;
-export type PrintMode = AllowedPropertiesValues.PrintMode;
-export type NavigationDenialReason = AllowedPropertiesValues.NavigationDenialReason;
-export type WidgetType = AllowedPropertiesValues.WidgetType;
-export type ErrorCode = AllowedPropertiesValues.Code;
-
-import { MainSchema, PayloadInterfacesProperties, AllowedPropertiesValues } from './types';
+import { MainSchema, PayloadInterfacesProperties } from './types';import { SubSchema } from './types/schemas';
+import { AllowedPropertiesValues } from './types/values';
 

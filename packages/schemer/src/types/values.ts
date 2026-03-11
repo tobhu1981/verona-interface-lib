@@ -10,23 +10,11 @@
 export namespace AllowedPropertiesValues {
 
   /** Progress indicator for presentation and responses */
-  export type Progress = 'none' | 'some' | 'complete';
+  export type DependencyType = 'file' | 'service';
 
-  /** Log policy levels */
-  export type LogPolicy = 'disabled' | 'lean' | 'rich' | 'debug';
+   /** Allowed data types for a variable value */
+  export type VariableType = 'string' | 'integer' | 'number' | 'boolean' | 'attachment' | 'json' | 'no-value'| 'coded';
 
-  /** Paging modes for unit presentation */
-  export type PagingMode = 'separate' | 'buttons' | 'concat-scroll' | 'concat-scroll-snap';
-
-  /** Print mode options */
-  export type PrintMode = 'off' | 'on' | 'on-with-ids';
-
-  /** Navigation denial reasons */
-  export type NavigationDenialReason = 'presentationIncomplete' | 'responsesIncomplete';
-
-   /** Widget Call */
-  export type WidgetType = 'WIDGET_CALC' | 'WIDGET_PERIODIC_TABLE' | 'WIDGET_MOLECULE_EDITOR' | 'UNIT';
-
-   /** Code values runtime error */
-  export type Code = 'AUDIO_CORRUPT' | 'GEOGEBRA_CRASH';
+  /**  Allowed data type formats for a variable value.*/
+  export type VariableFormat = 'text-selection' | 'image' | 'capture-image' | 'audio' | 'ggb-file' | 'non-negative' | 'latex' | 'math-ml' | 'math-table' | 'math-text-mix' | 'ggb-variable' | '';
 }
