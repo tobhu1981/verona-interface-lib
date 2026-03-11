@@ -1,34 +1,34 @@
-# Versionierungs-Anleitung: Spec vs. Package Version
+# Versioning Guide: Spec vs. Package Version
 
-## Zwei Versionen verstehen
+## Understanding the Two Versions
 
-### Package-Version (NPM)
-- Version **Library-Implementation**
-- Folgt SemVer (Semantic Versioning)
-- Ändert sich bei Code-Updates
+### Package Version (NPM)
+- Version of the **library implementation**
+- Follows SemVer (Semantic Versioning)
+- Changes with code updates
 
-### Spec-Version (Verona)
-- Die Version der **Verona-Spezifikation** die implementiert wird
-- Definiert von Verona-Projekt
-- Ändert sich nur bei Spec-Updates
+### Spec Version (Verona)
+- Version of the **Verona specification** being implemented
+- Defined by the Verona project
+- Changes only when the spec is updated
 
 ---
 
-## Setup: Beide Versionen in jeweiliger package.json
+## Setup: Both Versions in the Respective package.json
 
-### Beispiel für Package: Player
+### Example for Package: Player
 
 **`packages/player/package.json`:**
 
 ```json
 {
   "name": "@verona/player",
-  "version": "1.2.3",              // ← Package-Version (NPM)
-  "veronaSpec": "6.1.1",           // ← Spec-Version (Custom Field)
+  "version": "1.2.3",              // ← Package version (NPM)
+  "veronaSpec": "6.1.1",           // ← Spec version (custom field)
   "keywords": [
     "verona",
     "verona-player",
-    "verona-spec-6.1.1"            // ← Für npm-Suche
+    "verona-spec-6.1.1"            // ← For npm search
   ]
 }
 ```
@@ -75,26 +75,26 @@ export {
 
 ---
 
-## Workflow 1: Package-Version ändern (Bugfix/Features)
+## Workflow 1: Bumping the Package Version (Bugfixes / Features)
 
-**Wann:** Code-Änderungen ohne Spec-Änderung
+**When:** Code changes without a spec change
 
-### Schritt-für-Schritt:
+### Step by Step:
 
 ```bash
-# 1. In das Package wechseln
+# 1. Navigate to the package
 cd packages/player
 
-# 2. Code ändern
-# ... deine Änderungen ...
+# 2. Make your changes
+# ... your changes ...
 
-# 3. Version setzen
+# 3. Set the version
 
-## pumpen (automatisch):
-npm version patch   # 1.2.3 → 1.2.4 (Bugfix)
-npm version minor   # 1.2.3 → 1.3.0 (Feature)
+## bump automatically:
+npm version patch   # 1.2.3 → 1.2.4 (bugfix)
+npm version minor   # 1.2.3 → 1.3.0 (feature)
 
-## manuell setzen:
+## set manually:
 npm version         # 1.0.0-beta → 1.2.0-beta
 
 # 4. Build
@@ -105,51 +105,51 @@ git add .
 git commit -m "fix: correct message handling"
 git push origin main
 
-# 6. Optional: Tag für Release
+# 6. Optional: tag for release
 git tag player@1.2.4
 git push --tags
 ```
 
-**Resultat:**
+**Result:**
 - ✅ `package.json` → `"version": "1.2.4"`
-- ✅ `package.json` → `"veronaSpec": "6.1.1"` (unverändert!)
+- ✅ `package.json` → `"veronaSpec": "6.1.1"` (unchanged!)
 - ✅ `PACKAGE_VERSION` → `"1.2.4"`
-- ✅ `VERONA_SPEC_VERSION` → `"6.1.1"` (unverändert!)
+- ✅ `VERONA_SPEC_VERSION` → `"6.1.1"` (unchanged!)
 
 ---
 
-## Workflow 2: Spec-Version ändern (Breaking Change)
+## Workflow 2: Updating the Spec Version (Breaking Change)
 
-**Wann:** Neue Verona-Spezifikation veröffentlicht
+**When:** A new Verona specification is published
 
-### Schritt-für-Schritt:
+### Step by Step:
 
 ```bash
-# 1. In das Package wechseln
+# 1. Navigate to the package
 cd packages/player
 
-# 2. Code anpassen für neue Spec
-# ... Implementierung der neuen Spec ...
+# 2. Adapt the code for the new spec
+# ... implement the new spec ...
 
-# 3. Spec-Version MANUELL in package.json ändern
+# 3. Manually update veronaSpec in package.json
 ```
 
-**Editiere `package.json`:**
+**Edit `package.json`:**
 ```json
 {
   "name": "@verona/player",
-  "version": "1.2.3",              // ← Noch alte Version
-  "veronaSpec": "6.2.0",           // ← MANUELL auf neue Spec ändern!
+  "version": "1.2.3",              // ← Still old version
+  "veronaSpec": "6.2.0",           // ← MANUALLY change to new spec!
   "keywords": [
     "verona",
     "verona-player",
-    "verona-spec-6.2.0"            // ← Auch hier aktualisieren!
+    "verona-spec-6.2.0"            // ← Update here too!
   ]
 }
 ```
 
 ```bash
-# 4. MAJOR Version bump (Breaking Change!)
+# 4. MAJOR version bump (breaking change!)
 npm version major   # 1.2.3 → 2.0.0
 
 # 5. Build
@@ -160,55 +160,55 @@ git add .
 git commit -m "BREAKING CHANGE: update to Verona Spec 6.2.0"
 git push origin main
 
-# 7. Tag für Release
+# 7. Tag for release
 git tag player@2.0.0
 git push --tags
 ```
 
-**Resultat:**
+**Result:**
 - ✅ `package.json` → `"version": "2.0.0"` (MAJOR bump!)
-- ✅ `package.json` → `"veronaSpec": "6.2.0"` (neue Spec!)
+- ✅ `package.json` → `"veronaSpec": "6.2.0"` (new spec!)
 - ✅ `PACKAGE_VERSION` → `"2.0.0"`
 - ✅ `VERONA_SPEC_VERSION` → `"6.2.0"`
 
 ---
 
-## Versionierungs-Matrix
+## Versioning Matrix
 
-| Änderung | Package-Version | Spec-Version | Bump-Type |
-|----------|----------------|--------------|-----------|
-| Bugfix | 1.2.3 → 1.2.4 | 6.1.1 (gleich) | PATCH |
-| Neues Feature | 1.2.3 → 1.3.0 | 6.1.1 (gleich) | MINOR |
-| Breaking Change (Code) | 1.2.3 → 2.0.0 | 6.1.1 (gleich) | MAJOR |
-| **Neue Spec** | **1.2.3 → 2.0.0** | **6.1.1 → 6.2.0** | **MAJOR** |
+| Change | Package Version | Spec Version | Bump Type |
+|--------|----------------|--------------|-----------|
+| Bugfix | 1.2.3 → 1.2.4 | 6.1.1 (unchanged) | PATCH |
+| New feature | 1.2.3 → 1.3.0 | 6.1.1 (unchanged) | MINOR |
+| Breaking change (code) | 1.2.3 → 2.0.0 | 6.1.1 (unchanged) | MAJOR |
+| **New spec** | **1.2.3 → 2.0.0** | **6.1.1 → 6.2.0** | **MAJOR** |
 
 ---
 
-## Entscheidungsbaum
+## Decision Tree
 
 ```
-Hat sich die Verona-Spec geändert?
+Has the Verona spec changed?
 │
-├─ JA
-│  ├─ 1. veronaSpec in package.json MANUELL ändern
-│  ├─ 2. keywords aktualisieren
-│  ├─ 3. npm version major (Breaking Change!)
+├─ YES
+│  ├─ 1. Manually update veronaSpec in package.json
+│  ├─ 2. Update keywords
+│  ├─ 3. npm version major (breaking change!)
 │  └─ 4. CHANGELOG.md: "BREAKING: Spec 6.2.0"
 │
-└─ NEIN
-   ├─ Nur Code-Änderungen?
+└─ NO
+   ├─ Code-only changes?
    │
    ├─ Bugfix → npm version patch
    ├─ Feature → npm version minor
-   └─ Breaking Code → npm version major
+   └─ Breaking code change → npm version major
 ```
 
 ---
 
-## Prüfen welche Versionen aktuell sind
+## Checking Current Versions
 
 ```bash
-# In Code
+# In the build output
 cd packages/player
 pnpm build
 node -e "const p = require('./dist/index.js'); console.log('Package:', p.PACKAGE_VERSION, 'Spec:', p.VERONA_SPEC_VERSION);"
@@ -217,10 +217,10 @@ node -e "const p = require('./dist/index.js'); console.log('Package:', p.PACKAGE
 ```
 
 ```typescript
-// Im Verona-Modul
+// In a Verona module
 import { PACKAGE_VERSION, VERONA_SPEC_VERSION } from '@verona/player';
 
-console.log('Player Library:', PACKAGE_VERSION);    // "1.2.4"
+console.log('Player Library:', PACKAGE_VERSION);     // "1.2.4"
 console.log('Implements Spec:', VERONA_SPEC_VERSION); // "6.1.1"
 ```
 
@@ -228,55 +228,55 @@ console.log('Implements Spec:', VERONA_SPEC_VERSION); // "6.1.1"
 
 ## Publishing Workflow
 
-### Veröffentlichen nach Package-Update:
+### Publishing after a package update:
 
 ```bash
 cd packages/player
 pnpm build
 
-# Test lokal
+# Test locally
 npm pack
-# Prüfe den .tgz
+# Review the .tgz
 
 # Publish
 npm publish
 
-# Tag pushen
+# Push tags
 git push --tags
 ```
 
-### Veröffentlichen nach Spec-Update:
+### Publishing after a spec update:
 
 ```bash
 cd packages/player
 pnpm build
 
-# WICHTIG: Teste Kompatibilität!
-# Teste mit alten und neuen Hosts
+# IMPORTANT: Test compatibility!
+# Test with both old and new hosts
 
-# Publish mit Tag für Breaking Change
+# Publish
 npm publish
 
-# Tag pushen
+# Push tags
 git push --tags
 
-# GitHub Release mit Migration Guide
+# Create a GitHub release with a migration guide
 ```
 
 ---
 
 ## GitHub Pages Badge
 
-Die `.github/workflows/docs.yml` zeigt automatisch beide Versionen:
+The `.github/workflows/docs.yml` automatically displays both versions:
 
-**Option 1: Nur Spec-Version (aktuell):**
+**Option 1: Spec version only (current):**
 ```html
 <span class="badge">Spec $PLAYER_VERSION</span>
 ```
 
-**Option 2: Beide Versionen:**
+**Option 2: Both versions:**
 
-Erweitere die `docs.yml`:
+Extend `docs.yml`:
 
 ```yaml
 # Read both versions
@@ -293,46 +293,46 @@ PLAYER_SPEC_VERSION=$(node -p "require('./packages/player/package.json').veronaS
 
 ---
 
-## ⚠️ Wichtige Regeln
+## Important Rules
 
 ### ✅ DO:
-- ✅ **IMMER** MAJOR bump bei Spec-Änderung
-- ✅ **IMMER** CHANGELOG.md aktualisieren
-- ✅ **IMMER** Migration Guide bei Breaking Changes
-- ✅ Beide Versionen in README dokumentieren
-- ✅ Keywords in package.json aktualisieren
+- ✅ **ALWAYS** do a MAJOR bump when the spec changes
+- ✅ **ALWAYS** update CHANGELOG.md
+- ✅ **ALWAYS** provide a migration guide for breaking changes
+- ✅ Document both versions in the README
+- ✅ Update keywords in package.json
 
 ### ❌ DON'T:
-- ❌ Spec-Version ändern ohne Code-Anpassung
-- ❌ MINOR/PATCH bump bei Spec-Update
-- ❌ Vergessen veronaSpec in package.json zu ändern
-- ❌ Vergessen keywords zu aktualisieren
+- ❌ Change the spec version without updating the code
+- ❌ Use MINOR/PATCH bump for a spec update
+- ❌ Forget to update veronaSpec in package.json
+- ❌ Forget to update keywords
 
 ---
 
-## Checkliste: Spec-Update
+## Checklist: Spec Update
 
 ```
-☐ Code für neue Spec implementiert
-☐ Tests aktualisiert
-☐ package.json → veronaSpec geändert
-☐ package.json → keywords aktualisiert
-☐ npm version major ausgeführt
-☐ CHANGELOG.md geschrieben
-☐ MIGRATION.md erstellt (wenn nötig)
-☐ README.md aktualisiert
-☐ Gebaut und getestet
-☐ Committed & Tagged
-☐ Gepusht
-☐ GitHub Release erstellt
+☐ Code implemented for new spec
+☐ Tests updated
+☐ package.json → veronaSpec updated
+☐ package.json → keywords updated
+☐ npm version major executed
+☐ CHANGELOG.md written
+☐ MIGRATION.md created (if needed)
+☐ README.md updated
+☐ Built and tested
+☐ Committed & tagged
+☐ Pushed
+☐ GitHub release created
 ☐ npm published
 ```
 
 ---
 
-## 🔗 Kompatibilitäts-Matrix im README
+## Compatibility Matrix in the README
 
-Füge zu jedem Package-README hinzu:
+Add to each package README:
 
 ```markdown
 ## Compatibility
@@ -342,3 +342,4 @@ Füge zu jedem Package-README hinzu:
 | 2.x.x | 6.2.0 | ✅ Current | 2024-03-15 |
 | 1.x.x | 6.1.1 | ⚠️ Legacy | 2024-01-10 |
 | 0.x.x | 6.0.0 | ❌ Deprecated | 2023-11-01 |
+```
