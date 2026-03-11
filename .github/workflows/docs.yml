@@ -72,8 +72,9 @@ jobs:
           # Read versions dynamically from package.json
           PLAYER_VERSION=$(node -p "require('./packages/player/package.json').veronaSpec")
           EDITOR_VERSION=$(node -p "require('./packages/editor/package.json').veronaSpec")
-        
-          
+          SCHEMER_VERSION=$(node -p "require('./packages/schemer/package.json').veronaSpec")
+          WIDGET_VERSION=$(node -p "require('./packages/widget/package.json').veronaSpec")
+
           # Create index page with dynamic versions
           cat > gh-pages/index.html << EOF
           <!DOCTYPE html>

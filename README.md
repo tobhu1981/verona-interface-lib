@@ -126,8 +126,6 @@ cd package
 pnpm doc
 ```
 
-**For detailed documentation setup, see [here](DOCUMENTATION.md)**
-
 ### Clean Build Artifacts
 
 ```bash
