@@ -59,7 +59,7 @@ export namespace MainSchema {
     multiple?: boolean; // Default: false
     nullable?: boolean; // Default: false
     values?: SubSchema.values[];
-    valuePositionLabels?: SubSchema.valuePositionLabels;
+    valuePositionLabels?: SubSchema.valuePositionLabels[];
     valuesComplete?: boolean; // Default: false
     page?: string; // Page of the unit, on which the variable is located.
   }
