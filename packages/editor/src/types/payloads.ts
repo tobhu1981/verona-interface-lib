@@ -19,7 +19,7 @@ export namespace PayloadInterfacesProperties {
       sessionId: MainSchema.SessionIdString;
       unitDefinition?: string; // format:byte
       unitDefinitionType?: string;
-      editorConfig?: MainSchema.EditorConfig[];
+      editorConfig?: MainSchema.EditorConfig;
     }
   
   }
