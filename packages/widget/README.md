@@ -59,8 +59,6 @@ npm link @verona/widget
 ```
 Now you can find your verona-lib in node_modules named: @verona
 
-[**Here**](./WIDGET-INTEGRATION.md) is an example of how the editor package is integrated into and used in the Verona module: Speedtest Player.
-
 ## Documentation
 
 #### API Doku: 
