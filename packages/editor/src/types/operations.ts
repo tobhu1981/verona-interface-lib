@@ -16,7 +16,7 @@ export const VeronaOperations = {
   /** Editor announces it is ready to receive commands */
   READY_NOTIFICATION: 'voeReadyNotification',
   /** Player reports state changes (responses, navigation, etc.) */
-  STATE_CHANGED_NOTIFICATION: 'voeDefinitionChangedNotification',
+  DEFINITION_CHANGED_NOTIFICATION: 'voeDefinitionChangedNotification',
   
 
   /** Host commands editor to start with given configuration */
