@@ -8,7 +8,7 @@ Monorepo containing all Verona interface libraries for Player, Editor, Schemer, 
 
 | Package | Version | Spec Version | Description |
 |---------|---------|--------------|-------------|
-| [@verona/shared](./packages/shared) | 1.0.0 | - | Shared utilities and Player Interface |
+| [@verona/shared](./packages/shared) | 1.0.0-beta | - | Shared utilities and Player Interface |
 | [@verona/editor](./packages/editor) | 1.0.0-beta | 3.5.0 | Verona Editor Interface |
 | [@verona/player](./packages/player) | 1.0.0-beta | 6.1.1 | Verona Player Interface |
 | [@verona/widget](./packages/widget) | 1.0.0-beta | 1.0.0 | Verona Widget Interface |
