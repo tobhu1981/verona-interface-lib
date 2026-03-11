@@ -67,6 +67,10 @@ cd packages/schemer
 pnpm docs
 ```
 
+#### How it works
+
+[**Here**](LIB_WORKING.md)
+
 ## Versioning
 
 Find more information about this [here](../../README.md) in the monorepo root documentation.

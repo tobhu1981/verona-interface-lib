@@ -69,6 +69,10 @@ cd packages/editor
 pnpm docs
 ```
 
+#### How it works
+
+[**Here**](LIB_WORKING.md)
+
 ## Versioning
 
 Find more information about this [here](../../README.md) in the mono-repo documentation.

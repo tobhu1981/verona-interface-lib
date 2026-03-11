@@ -58,7 +58,7 @@ npm link @verona/player
 ```
 Now you can find your verona-lib in node_modules named: @verona
 
-[**Here**](./PLAYER-INTEGRATION.md) is an example of how the player package is integrated into and used in the Verona module: Speedtest Player.
+[**Here**](PLAYER-INTEGRATION.md) is an example of how the player package is integrated into and used in the Verona module: Speedtest Player.
 
 ## Documentation
 
@@ -71,7 +71,7 @@ pnpm docs
 
 #### How it works
 
-[**Here**](./LIB_WORKING.md)
+[**Here**](LIB_WORKING.md)
 
 ## Versioning
 

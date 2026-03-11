@@ -67,6 +67,9 @@ Now you can find your verona-lib in node_modules named: @verona
 cd packages/widget
 pnpm docs
 ```
+#### How it works
+
+[**Here**](LIB_WORKING.md)
 
 ## Versioning
 

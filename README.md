@@ -11,8 +11,8 @@ Monorepo containing all Verona interface libraries for Player, Editor, Schemer, 
 | [@verona/shared](./packages/shared) | 1.0.0 | - | Shared utilities and Player Interface |
 | [@verona/editor](./packages/editor) | 1.0.0-beta | 3.5.0 | Verona Editor Interface |
 | [@verona/player](./packages/player) | 1.0.0-beta | 6.1.1 | Verona Player Interface |
-| [@verona/widget](./packages/widget) | 1.0.0-beta | 1.0.0 | Verona widget Interface |
-| [@verona/schemer](./packages/schemer) | 1.0.0-beta | 3.2.0 | Verona schemer Interface |
+| [@verona/widget](./packages/widget) | 1.0.0-beta | 1.0.0 | Verona Widget Interface |
+| [@verona/schemer](./packages/schemer) | 1.0.0-beta | 3.2.0 | Verona Schemer Interface |
 
 
 ## Getting Started
@@ -98,6 +98,10 @@ pnpm dev
 
 ## Documentation
 
+This generated documentation is also displayed on GitHub Pages.
+
+You can find more informations about the packages, read the README-File in the package.
+
 ### Prerequisites
 
 Before generating documentation, run the build process! The documentation requires the **dist** folder, which is created by the build process.
@@ -122,7 +126,7 @@ cd package
 pnpm doc
 ```
 
-**For detailed documentation setup, see [here](./DOCUMENTATION.md)**
+**For detailed documentation setup, see [here](DOCUMENTATION.md)**
 
 ### Clean Build Artifacts
 
